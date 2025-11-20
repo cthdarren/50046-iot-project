@@ -1,0 +1,85 @@
+# ============================
+# Node
+# ============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# ============================
+# Next.js
+# ============================
+.next/
+out/
+.next-tmp/
+.turbo/
+
+# ============================
+# Environment Variables
+# ============================
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.production.local
+.env.test.local
+!.env.example   # keep template for teammates
+
+# ============================
+# Logs
+# ============================
+*.log
+logs/
+*.pid
+*.seed
+
+# ============================
+# Dependency Managers
+# ============================
+package-lock.json
+pnpm-lock.yaml
+# ^ optional — keep if you want exact deterministic builds
+# yarn.lock
+# ^ choose one depending on your team
+
+# ============================
+# Build / Output
+# ============================
+dist/
+coverage/
+.cache/
+.next/
+out/
+storybook-static/
+
+# ============================
+# OS / Editor
+# ============================
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+# If you want to share only specific VSCode settings, unignore:
+# !.vscode/settings.json
+
+# JetBrains
+.idea/
+
+# ============================
+# Testing
+# ============================
+coverage/
+.nyc_output/
+jest-cache/
+jest-debug.log
+
+# ============================
+# Misc
+# ============================
+*.swp
+*.swo
+*.tmp
+

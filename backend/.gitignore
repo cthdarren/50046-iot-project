@@ -1,0 +1,96 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Byte-compiled / optimized / DLL files
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments (uv, venv, poetry, etc.)
+.venv/
+venv/
+.env/
+.envrc
+.python-version
+
+# =========================
+# FastAPI / Uvicorn
+# =========================
+# Auto-generated temporary files
+*.log
+
+# =========================
+# Alembic
+# =========================
+alembic/versions/*.pyc
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
+# If you generate alembic.ini or configs dynamically
+*.ini~
+*.old
+
+# =========================
+# Environment Variables
+# =========================
+# Typical FastAPI secrets
+.env
+.env.*
+!.env.example      # Keep template
+
+# =========================
+# IDE / Editors
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Docker
+# =========================
+# Docker-related artifacts
+*.pid
+*.seed
+
+# Docker Compose override files (local only)
+docker-compose.override.yml
+
+# =========================
+# Testing / Coverage
+# =========================
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache/
+pytest_cache/
+
+# =========================
+# MyPy / Pylance / Type Checkers
+# =========================
+.mypy_cache/
+.pyre/
+.dmypy.json
+.pytype/
+
+# =========================
+# OS files
+# =========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
