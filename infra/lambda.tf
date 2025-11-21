@@ -14,11 +14,11 @@ resource "aws_lambda_function" "iot_handler" {
 
     environment {
         variables = {
-            DB_HOST     = aws_db_instance.postgres.address
-            DB_PORT     = "5432"
-            DB_NAME     = "iotdb"
-            DB_USER     = var.db_username
-            DB_PASSWORD = var.db_password
+            DB_HOST       = aws_db_instance.postgres.address
+            DB_PORT       = "5432"
+            DB_NAME       = "iotdb"
+            DB_USER       = var.db_username
+            DB_SECRET_ARN = aws_secretsmanager_secret.db_credentials.arn
         }
     }
 }
