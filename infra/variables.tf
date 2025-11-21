@@ -1,3 +1,5 @@
 variable "region" {
-    default = "ap-southeast-1"
+    description = "AWS region where resources will be created"
+    type        = string
+    default     = "ap-southeast-1"
 }
