@@ -2,4 +2,4 @@
 build:
 	npm install
 	npm run build
-	zip -r ../infra/lambda.zip dist/
+	zip -r ../infra/lambda.zip dist/ node_modules/
