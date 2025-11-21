@@ -15,3 +15,6 @@ crash.*.log
 # to change depending on the environment.
 *.tfvars
 *.tfvars.json
+
+# Lambda deployment package
+lambda.zip
