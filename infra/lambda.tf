@@ -17,8 +17,8 @@ resource "aws_lambda_function" "iot_handler" {
             DB_HOST       = aws_db_instance.postgres.address
             DB_PORT       = "5432"
             DB_NAME       = "iotdb"
-            DB_USER       = var.db_username
-            DB_SECRET_ARN = aws_secretsmanager_secret.rds_credentials.arn
+            DB_USER       = local.rds_credentials.username
+            DB_SECRET_ARN = data.aws_secretsmanager_secret.rds_credentials.arn
         }
     }
 }

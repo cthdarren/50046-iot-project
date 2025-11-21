@@ -33,26 +33,13 @@ resource "aws_db_instance" "postgres" {
     engine_version     = "15"
     instance_class     = "db.t3.micro"
 
-    username           = var.db_username
-    password           = var.db_password
+    username           = local.rds_credentials.username
+    password           = local.rds_credentials.password
 
     db_subnet_group_name = aws_db_subnet_group.db_subnets.name
     vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
     skip_final_snapshot = true
-}
-
-/* Secrets Manager secret containing DB credentials for RDS Proxy auth */
-resource "aws_secretsmanager_secret" "rds_credentials" {
-    name = "rds_credentials"
-}
-
-resource "aws_secretsmanager_secret_version" "rds_credentials_version" {
-    secret_id     = aws_secretsmanager_secret.rds_credentials.id
-    secret_string = jsonencode({
-        username = var.db_username,
-        password = var.db_password
-    })
 }
 
 /* IAM role for RDS Proxy to access Secrets Manager on your behalf */
@@ -84,7 +71,7 @@ resource "aws_db_proxy" "rds_proxy" {
 
     auth {
         auth_scheme = "SECRETS"
-        secret_arn  = aws_secretsmanager_secret.rds_credentials.arn
+        secret_arn  = data.aws_secretsmanager_secret.rds_credentials.arn
         iam_auth    = "DISABLED"
     }
 
