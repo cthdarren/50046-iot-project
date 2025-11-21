@@ -5,3 +5,7 @@ output "lambda_name" {
 output "rds_endpoint" {
     value = aws_db_instance.postgres.address
 }
+
+output "rds_proxy_endpoint" {
+    value = aws_db_proxy.rds_proxy.endpoint
+}

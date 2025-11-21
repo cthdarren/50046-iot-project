@@ -14,7 +14,7 @@ resource "aws_lambda_function" "iot_handler" {
 
     environment {
         variables = {
-            DB_HOST       = aws_db_instance.postgres.address
+            DB_HOST       = aws_db_proxy.rds_proxy.endpoint
             DB_PORT       = "5432"
             DB_NAME       = "iotdb"
             DB_USER       = local.rds_credentials.username
