@@ -2,6 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
 const pg_1 = require("pg");
+// Validate required environment variables
+const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
+for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+        throw new Error(`Missing required environment variable: ${envVar}`);
+    }
+}
 // Create client outside handler to reuse connections across invocations
 const client = new pg_1.Client({
     host: process.env.DB_HOST,
@@ -23,8 +30,16 @@ const handler = async (event) => {
         return { status: "ok" };
     }
     catch (error) {
-        // Reset connection state on error to allow reconnection on next invocation
-        isConnected = false;
+        // Reset connection state and close client on error to prevent connection leaks
+        if (isConnected) {
+            try {
+                await client.end();
+            }
+            catch (endError) {
+                // Ignore errors when closing connection
+            }
+            isConnected = false;
+        }
         return { status: "error", message: error instanceof Error ? error.message : String(error) };
     }
 };
