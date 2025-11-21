@@ -41,3 +41,60 @@ resource "aws_db_instance" "postgres" {
 
     skip_final_snapshot = true
 }
+
+/* Secrets Manager secret containing DB credentials for RDS Proxy auth */
+resource "aws_secretsmanager_secret" "rds_credentials" {
+    name = "rds_credentials"
+}
+
+resource "aws_secretsmanager_secret_version" "rds_credentials_version" {
+    secret_id     = aws_secretsmanager_secret.rds_credentials.id
+    secret_string = jsonencode({
+        username = var.db_username,
+        password = var.db_password
+    })
+}
+
+/* IAM role for RDS Proxy to access Secrets Manager on your behalf */
+resource "aws_iam_role" "rds_proxy_role" {
+    name = "rds-proxy-role"
+
+    assume_role_policy = jsonencode({
+        Version = "2012-10-17",
+        Statement = [{
+            Action    = "sts:AssumeRole",
+            Effect    = "Allow",
+            Principal = { Service = "rds.amazonaws.com" }
+        }]
+    })
+}
+
+resource "aws_iam_role_policy_attachment" "rds_proxy_policy" {
+    role       = aws_iam_role.rds_proxy_role.name
+    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSProxyServiceRolePolicy"
+}
+
+/* RDS Proxy */
+resource "aws_db_proxy" "rds_proxy" {
+    name                   = "iot-rds-proxy"
+    engine_family          = "POSTGRESQL"
+    require_tls            = true
+    idle_client_timeout    = 1800
+    role_arn               = aws_iam_role.rds_proxy_role.arn
+
+    auth {
+        auth_scheme = "SECRETS"
+        secret_arn  = aws_secretsmanager_secret.rds_credentials.arn
+        iam_auth    = "DISABLED"
+    }
+
+    vpc_subnet_ids         = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+    vpc_security_group_ids = [aws_security_group.rds_sg.id]
+}
+
+/* Register the RDS instance as a target for the proxy */
+resource "aws_db_proxy_target" "rds_target" {
+    db_proxy_name     = aws_db_proxy.rds_proxy.name
+    target_group_name = "default"
+    db_instance_identifier = aws_db_instance.postgres.id
+}
