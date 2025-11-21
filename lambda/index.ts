@@ -8,37 +8,41 @@ for (const envVar of requiredEnvVars) {
   }
 }
 
-// Create client outside handler to reuse connections across invocations
-const client = new Client({
+// Store database configuration
+const dbConfig = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-});
+};
 
-let isConnected = false;
+// Create client outside handler to reuse connections across invocations
+let client: Client | null = null;
+
+async function getClient(): Promise<Client> {
+  if (!client) {
+    client = new Client(dbConfig);
+    await client.connect();
+  }
+  return client;
+}
 
 export const handler = async (event: any) => {
   try {
-    // Connect only if not already connected
-    if (!isConnected) {
-      await client.connect();
-      isConnected = true;
-    }
-    
-    await client.query("INSERT INTO sensor_data (payload) VALUES ($1)", [
+    const dbClient = await getClient();
+    await dbClient.query("INSERT INTO sensor_data (payload) VALUES ($1)", [
       JSON.stringify(event),
     ]);
     return { status: "ok" };
   } catch (error) {
-    // Reset connection state and close client on error to prevent connection leaks
-    if (isConnected) {
+    // Reset client on error to allow reconnection on next invocation
+    if (client) {
       try {
         await client.end();
       } catch (endError) {
         // Ignore errors when closing connection
       }
-      isConnected = false;
+      client = null;
     }
     return { status: "error", message: error instanceof Error ? error.message : String(error) };
   }
