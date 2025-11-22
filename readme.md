@@ -14,3 +14,27 @@ To execute this we have come up with the following solution.
 ## System Diagram
 
 ![system design image](assets/images/cloud_and_iot_sys_diagram.png)
+
+## Running the Project
+
+### Production Deployment
+
+Ensure you have `aws-cli` and `terraform` installed locally on your machine.
+
+To deploy, we first have to create the RDS credentials in AWS SecretsManager. Note that these secrets will be used for the production deployment so please change the username and password to secure ones. Use `aws-cli` to create the secret by running:
+
+```bash
+aws secretsmanager create-secret \
+  --name rds_credentials \
+  --secret-string '{"username":"iot_master","password":"S3cureRandomPassw0rd!"}'
+```
+
+After creating the secrets, use terraform to apply the infrastructure under your AWS account.
+
+```bash
+terraform apply
+```
+
+### Running Locally
+
+_TODO_
