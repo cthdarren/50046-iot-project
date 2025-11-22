@@ -32,7 +32,7 @@ resource "aws_iam_policy" "lambda_secretsmanager" {
         Action = [
           "secretsmanager:GetSecretValue"
         ],
-        Resource = var.db_secret_arn
+        Resource = data.aws_secretsmanager_secret.rds_credentials.arn
       }
     ]
   })
