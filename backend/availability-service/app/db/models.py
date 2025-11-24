@@ -1,0 +1,46 @@
+import datetime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean, Float
+from sqlalchemy.orm import declarative_base, relationship
+
+Base = declarative_base()
+
+class Mall(Base):
+    __tablename__ = "malls"
+    id = Column(type=Integer, primary_key=True)
+    name = Column(type=String, nullable=False)
+    # one mall to many toilets
+    toilets = relationship("Toilet", back_populates="mall")
+    
+class Toilet(Base):
+    __tablename__ = "toilets"
+    id = Column(type=Integer, primary_key=True)
+    level = Column(type=String, nullable=False)
+    mall_id = Column(type=Integer, ForeignKey=ForeignKey("malls.id"))
+    mall = relationship("Mall", back_populates="toilets")
+    cubicles = relationship("Cubicle", back_populates="toilet")
+
+class Cubicle(Base):
+    __tablename__ = "cubicles"
+    id = Column(type=Integer, primary_key=True)
+    toilet_id = Column(type=Integer, ForeignKey=ForeignKey("toilets.id"))
+    toilet = relationship("Toilet", back_populates="toilet")
+    # only one row in state table for each cubicle
+    cubicle_state = relationship("CubicleState", back_populates="cubicle", uselist=False)
+    cubicle_events = relationship("CubicleEvent", back_populates="cubicle")
+    
+class CubicleState(Base):
+    __tablename__ = "cubicle_states"
+    id = Column(type=Integer, primary_key=True)
+    occupied = Column(type=Boolean, nullable=False)
+    toilet_roll_percentage = Column(type=Float)
+    updated_at = Column(type=DateTime, default=datetime.utcnow)
+    cubicle = relationship("Cubicle", back_populates="cubicle_state")
+
+class CubicleEvent(Base):
+    __tablename__ = "cubicle_events"
+    id = Column(type=Integer, primary_key=True)
+    cubicle_id = Column(type=Integer, ForeignKey=ForeignKey("cubicles.id"))
+    occupied = Column(type=Boolean)
+    toilet_roll_percentage = Column(type=Float)
+    timestamp = Column(type=DateTime, default=datetime.utcnow)
+    cubicle = relationship("Cubicle", back_populates="cubicle_events")
