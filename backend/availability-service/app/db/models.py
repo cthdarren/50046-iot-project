@@ -23,7 +23,7 @@ class Cubicle(Base):
     __tablename__ = "cubicles"
     id = Column(Integer, primary_key=True)
     toilet_id = Column(Integer, ForeignKey("toilets.id"))
-    toilet = relationship("Toilet", back_populates="toilet")
+    toilet = relationship("Toilet", back_populates="cubicles")
     # only one row in state table for each cubicle
     cubicle_state = relationship("CubicleState", back_populates="cubicle", uselist=False)
     cubicle_events = relationship("CubicleEvent", back_populates="cubicle")
@@ -31,6 +31,7 @@ class Cubicle(Base):
 class CubicleState(Base):
     __tablename__ = "cubicle_states"
     id = Column(Integer, primary_key=True)
+    cubicle_id = Column(Integer, ForeignKey("cubicles.id"), nullable=False)
     occupied = Column(Boolean, nullable=False)
     toilet_roll_percentage = Column(Float)
     updated_at = Column(DateTime, default=datetime.now)
@@ -39,7 +40,7 @@ class CubicleState(Base):
 class CubicleEvent(Base):
     __tablename__ = "cubicle_events"
     id = Column(Integer, primary_key=True)
-    cubicle_id = Column(Integer, ForeignKey("cubicles.id"))
+    cubicle_id = Column(Integer, ForeignKey("cubicles.id"), nullable=False)
     occupied = Column(Boolean)
     toilet_roll_percentage = Column(Float)
     timestamp = Column(DateTime, default=datetime.now)

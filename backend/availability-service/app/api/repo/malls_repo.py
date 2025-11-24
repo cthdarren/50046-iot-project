@@ -5,3 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 class MallsRepo():
     def __init__(self) -> None:
         self.db: AsyncGenerator[AsyncSession] = get_db()
+        
+    def create_mall(self, name: str):
+        db = self.db
+        
