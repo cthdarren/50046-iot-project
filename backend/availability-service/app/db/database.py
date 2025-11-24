@@ -1,27 +1,23 @@
-from sqlalchemy import Engine
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
+    AsyncEngine,
     create_async_engine,
-    async_sessionmaker
+    async_sessionmaker,
 )
-from core.config import Settings
+from core.config import settings
 
-if not Settings.DATABASE_URL:
+if not settings.DATABASE_URL:
     raise ValueError("DATABASE_URL is not set in .env file.")
 
-engine: Engine = create_async_engine(
-    url=Settings.DATABASE_URL, 
-    echo=False, 
-    future=True
+engine: AsyncEngine = create_async_engine(
+    url=settings.DATABASE_URL, echo=False, future=True
 )
 
 SessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(
-    bind=engine, 
-    autoflush=False, 
-    bind=engine
+    bind=engine, autoflush=False
 )
+
 
 async def get_db():
     async with SessionLocal() as session:
         yield session
-
