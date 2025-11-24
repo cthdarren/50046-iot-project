@@ -20,7 +20,10 @@ client.on("message", async (topic, message) => {
   let payload = payloadStr;
   try {
     payload = JSON.parse(payloadStr);
-  } catch (_) {}
+  } catch (err) {
+    // Failed to parse JSON; using original string as fallback payload.
+    console.warn("Failed to parse MQTT message as JSON:", err, "Payload:", payloadStr);
+  }
   const event = { topic, payload, received_at: new Date().toISOString() };
   try {
     const resp = await axios.post(lambdaUrl, event, { timeout: 5000 });
