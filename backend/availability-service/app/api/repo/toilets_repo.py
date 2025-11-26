@@ -1,6 +1,7 @@
 from schemas.request_dto.toilet_request_dto import ToiletRequestDto
-from sqlalchemy import insert, select, delete
+from sqlalchemy import select, delete
 from db.models import Toilet
+from typing import Optional, Sequence
 
 
 class ToiletsRepo:
@@ -29,6 +30,16 @@ class ToiletsRepo:
         statement = select(Toilet).where(Toilet.id == toilet_id, Toilet.mall_id == mall_id)
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()
+    async def get_toilets_by_fields(self, mall_id: int, gender: Optional[str] = None, level: Optional[str] = None, description: Optional[str] = None) -> Sequence[Toilet]:
+        statement = select(Toilet).where(Toilet.mall_id == mall_id)
+        if gender:
+            statement = statement.where(Toilet.gender == gender)
+        if level:
+            statement = statement.where(Toilet.level == level)
+        if description:
+            statement = statement.where(Toilet.description == description)
+        result = await self.db.execute(statement)
+        return result.scalars().all()
 
     async def update_toilet(self, toilet: Toilet, req_dto: ToiletRequestDto):
         model_dict = req_dto.model_dump(exclude_unset=True)

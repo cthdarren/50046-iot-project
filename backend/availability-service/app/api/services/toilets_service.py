@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Optional
 from api.repo.toilets_repo import ToiletsRepo
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.exceptions import InternalServerErrorException, NotFoundException
@@ -31,6 +31,11 @@ class ToiletsService:
         if not toilet:
             raise NotFoundException(detail="Toilet not found.")
         return toilet
+    
+    async def get_toilets_by_fields(self, mall_id: int, gender: Optional[str], level: Optional[str], description: Optional[str]) -> Sequence[Toilet]:
+        if not await self.mall_repo.get_mall_by_id(mall_id):
+            raise NotFoundException(detail="Mall not found.")
+        return await self.toilet_repo.get_toilets_by_fields(mall_id, gender, level, description)
 
     async def update_toilet(
         self,

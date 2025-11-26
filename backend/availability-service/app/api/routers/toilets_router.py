@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Optional
 from fastapi import APIRouter, Depends
 from api.services.toilets_service import ToiletsService
 from db.models import Toilet
@@ -7,6 +7,20 @@ from schemas.response_dto.toilet_dto import ToiletDto
 from schemas.response_dto.common import SuccessResponse
 
 router = APIRouter(prefix="/malls/{mall_id}/toilets")
+
+
+@router.get("/", response_model=Sequence[ToiletDto])
+async def get_toilets_by_fields(
+    mall_id: int,
+    gender: Optional[str] = None,
+    level: Optional[str] = None,
+    description: Optional[str] = None,
+    service: ToiletsService = Depends(),
+) -> Sequence[ToiletDto]:
+    toilets: Sequence[Toilet] = await service.get_toilets_by_fields(
+        mall_id, gender, level, description
+    )
+    return [ToiletDto.model_validate(toilet) for toilet in toilets]
 
 
 @router.get("/", response_model=Sequence[ToiletDto])
