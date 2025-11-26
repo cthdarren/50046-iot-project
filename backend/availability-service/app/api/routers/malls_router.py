@@ -25,7 +25,7 @@ async def get_mall(mall_id: int, service: MallsService = Depends()) -> MallDto:
 async def create_mall(
     req_dto: MallRequestDto, service: MallsService = Depends()
 ) -> MallDto:
-    mall = await service.create_mall(req_dto.name)
+    mall: Mall = await service.create_mall(req_dto.name)
     return MallDto.model_validate(mall)
 
 

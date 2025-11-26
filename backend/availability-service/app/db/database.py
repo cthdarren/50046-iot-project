@@ -1,3 +1,4 @@
+import asyncio
 from typing import AsyncIterator
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -7,15 +8,34 @@ from sqlalchemy.ext.asyncio import (
 )
 from core.config import settings
 
-if not settings.DATABASE_URL:
-    raise ValueError("DATABASE_URL is not set in .env file.")
+configs = [settings.DB_USER, settings.DB_PASSWORD, settings.DB_HOST, settings.DB_PORT, settings.DB_NAME]
+
+for e in configs:
+    if not e:
+        raise ValueError(f"{e=} is not set in .env file.")
+    
+
+DATABASE_URL = f"postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+
 
 engine: AsyncEngine = create_async_engine(
-    url=settings.DATABASE_URL,
-    echo=False,
+    url=DATABASE_URL,
+    echo=True,
     future=True,
     pool_pre_ping=True,
 )
+
+async def wait_for_db():
+    import asyncpg
+    retries = 5
+    for i in range(retries):
+        try:
+            conn = await asyncpg.connect(DATABASE_URL)
+            await conn.close()
+            return
+        except Exception:
+            print("DB not ready, retrying...")
+            await asyncio.sleep(2)
 
 SessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(
     bind=engine,

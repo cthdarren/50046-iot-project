@@ -11,9 +11,14 @@ class MallsRepo:
         self.db = db
 
     async def create_mall(self, req_dto: MallRequestDto) -> Mall:
-        statement = insert(Mall).values(**req_dto.model_dump())
-        result = await self.db.execute(statement)
+        mall: Mall = Mall(
+            name=req_dto.name,
+        )
+        self.db.add(mall)
+        await self.db.flush()
         await self.db.commit()
+        stmt = select(Mall).where(Mall.id == mall.id).options(selectinload(Mall.toilets))
+        result = await self.db.execute(stmt)
         return result.scalar_one()
 
     async def get_mall_by_id(self, id: int) -> Mall | None:
@@ -28,6 +33,7 @@ class MallsRepo:
             select(Mall)
             .where(Mall.name == data.name)
             .options(selectinload(Mall.toilets))
+            .limit(1)
         )
         result = await self.db.execute(statement)
         return result.scalar_one_or_none()

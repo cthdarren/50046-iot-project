@@ -13,13 +13,13 @@ class MallsService:
         self.mall_repo = MallsRepo(db)
 
     async def get_mall_by_id(self, id: int) -> Mall:
-        mall: Mall = await self.mall_repo.get_mall_by_id(id)
+        mall: Mall | None = await self.mall_repo.get_mall_by_id(id)
         if not mall:
             raise NotFoundException(detail="Mall not found.")
         return mall
 
     async def get_mall_by_name(self, mall_req_dto: MallRequestDto) -> Mall:
-        mall: Mall = await self.mall_repo.get_mall_by_name(mall_req_dto)
+        mall: Mall | None = await self.mall_repo.get_mall_by_name(mall_req_dto)
         if not mall:
             raise NotFoundException(detail="Mall not found.")
         return mall
@@ -33,6 +33,8 @@ class MallsService:
         return await self.mall_repo.create_mall(MallRequestDto(name=name))
 
     async def update_mall(self, mall_id: int, name: str) -> Mall:
+        if await self.mall_repo.get_mall_by_name(MallRequestDto(name=name)):
+            raise DuplicateException("Mall with similar name already exists.")
         mall = await self.get_mall_by_id(mall_id)
         dto = MallRequestDto(name=name)
         return await self.mall_repo.update_mall(mall, dto)
