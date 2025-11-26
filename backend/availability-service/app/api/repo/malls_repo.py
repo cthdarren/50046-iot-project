@@ -1,5 +1,5 @@
 from typing import Literal, Sequence
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, insert
 from sqlalchemy.orm import selectinload
 from schemas.request_dto.mall_request_dto import MallRequestDto
 from db.models import Mall
@@ -10,12 +10,11 @@ class MallsRepo:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_mall(self, mall: Mall) -> Mall:
-        self.db.add(mall)
-        await self.db.flush()
+    async def create_mall(self, req_dto: MallRequestDto) -> Mall:
+        statement = insert(Mall).values(**req_dto.model_dump())
+        result = await self.db.execute(statement)
         await self.db.commit()
-        await self.db.refresh(mall, attribute_names=["toilets"])
-        return mall
+        return result.scalar_one()
 
     async def get_mall_by_id(self, id: int) -> Mall | None:
         statement = (

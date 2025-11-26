@@ -7,4 +7,3 @@ class ToiletRequestDto(BaseModel):
     level: str
     gender: Gender
     description: str
-    mall_id: int

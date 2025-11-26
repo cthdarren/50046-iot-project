@@ -1,10 +1,10 @@
-from pydantic import BaseModel
-from schemas.enum.toilet_enum import Gender
+from pydantic import BaseModel, ConfigDict
 
 class ToiletDto(BaseModel):
     id: int
     level: str
-    gender: Gender
+    gender: str
     description: str
     mall_id: int
-    
+
+    model_config = ConfigDict(from_attributes=True)

@@ -41,5 +41,5 @@ async def update_mall(
 async def delete_mall(
     mall_id: int, service: MallsService = Depends()
 ) -> SuccessResponse:
-    mall = await service.delete_mall(mall_id)
+    await service.delete_mall(mall_id)
     return SuccessResponse(data="Successfully deleted mall.")

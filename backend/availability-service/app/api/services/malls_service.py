@@ -30,8 +30,7 @@ class MallsService:
     async def create_mall(self, name: str) -> Mall:
         if mall := await self.mall_repo.get_mall_by_name(MallRequestDto(name=name)):
             raise DuplicateException(detail="Mall already exists.")
-        mall = Mall(name=name)
-        return await self.mall_repo.create_mall(mall)
+        return await self.mall_repo.create_mall(MallRequestDto(name=name))
 
     async def update_mall(self, mall_id: int, name: str) -> Mall:
         mall = await self.get_mall_by_id(mall_id)
