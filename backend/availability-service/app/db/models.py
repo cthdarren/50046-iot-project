@@ -15,6 +15,8 @@ class Toilet(Base):
     __tablename__ = "toilets"
     id = Column(Integer, primary_key=True)
     level = Column(String, nullable=False)
+    description = Column(String)
+    gender = Column(String, nullable=False)
     mall_id = Column(Integer, ForeignKey("malls.id"))
     mall = relationship("Mall", back_populates="toilets")
     cubicles = relationship("Cubicle", back_populates="toilet")

@@ -1,10 +1,10 @@
 from pydantic import BaseModel
+
 from schemas.enum.toilet_enum import Gender
 
-class ToiletDto(BaseModel):
-    id: int
+
+class ToiletRequestDto(BaseModel):
     level: str
     gender: Gender
     description: str
     mall_id: int
-    
