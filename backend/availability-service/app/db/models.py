@@ -26,7 +26,6 @@ class Cubicle(Base):
     id = Column(Integer, primary_key=True)
     toilet_id = Column(Integer, ForeignKey("toilets.id"))
     toilet = relationship("Toilet", back_populates="cubicles")
-    # only one row in state table for each cubicle
     cubicle_state = relationship("CubicleState", back_populates="cubicle", uselist=False)
     cubicle_events = relationship("CubicleEvent", back_populates="cubicle")
     
