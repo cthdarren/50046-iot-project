@@ -1,0 +1,124 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt
+    ports:
+      - "1883:1883"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_config:/mosquitto/config
+      - ./mosquitto-config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    # You can place a mosquitto.conf in ./mosquitto-config if needed.
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    environment:
+      - SERVICES=secretsmanager,lambda,iot
+      - DEBUG=1
+      - AWS_DEFAULT_REGION=${AWS_REGION}
+    ports:
+      - "4566:4566" # Edge port
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    # NOTE: LocalStack IoT support is partial; we use the standalone mqtt broker + a bridge script instead.
+
+  lambda:
+    build:
+      context: ./lambda
+      dockerfile: Dockerfile
+    container_name: lambda
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      availability-service:
+        condition: service_started
+    ports:
+      - "8080:8080" # Local invocation endpoint
+
+  availability-service:
+    # Placeholder backend service. Replace command once you add code.
+    build:
+      context: ./backend/availability-service
+      dockerfile: Dockerfile
+    container_name: availability-service
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+    ports:
+      - "${AVAILABILITY_SERVICE_PORT}:${AVAILABILITY_SERVICE_PORT}"
+    volumes:
+      - ./.env:/app/.env
+
+  # frontend:
+  #   # Placeholder frontend service. Replace with your chosen framework dev server.
+  #   build:
+  #     context: ./frontend
+  #   container_name: frontend
+  #   environment:
+  #     VITE_API_BASE_URL: http://localhost:3001
+  #   command:
+  #     [
+  #       "sh",
+  #       "-c",
+  #       "echo 'Add frontend code to start your dev server' && sleep infinity",
+  #     ]
+  #   ports:
+  #     - "5173:5173" # Common Vite port; adjust per framework
+  #   depends_on:
+  #     - backend
+
+  bridge-mqtt-to-lambda:
+    # Simple Node subscriber that listens to MQTT and invokes local lambda HTTP endpoint.
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./scripts:/app
+    environment:
+      MQTT_HOST: ${MQTT_HOST}
+      MQTT_PORT: ${MQTT_PORT}
+      LAMBDA_INVOKE_URL: http://lambda:8080/invoke
+    depends_on:
+      - mqtt
+      - lambda
+    command: ["node", "mqtt-to-lambda.js"]
+
+volumes:
+  pg_data:
+  mosquitto_data:
+  mosquitto_config:
+  localstack_data:
+
+networks:
+  default:
+    name: iot_local_net
