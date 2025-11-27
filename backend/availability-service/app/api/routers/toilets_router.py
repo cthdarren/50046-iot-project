@@ -4,32 +4,35 @@ from api.services.toilets_service import ToiletsService
 from db.models import Toilet
 from schemas.request_dto.toilet_request_dto import ToiletRequestDto
 from schemas.response_dto.toilet_dto import ToiletDto
+from schemas.response_dto.toilets_list_dto import ToiletsListDto
 from schemas.response_dto.common import SuccessResponse
 
 router = APIRouter(prefix="/malls/{mall_id}/toilets")
 
 
-@router.get("/", response_model=Sequence[ToiletDto])
+@router.get("/", response_model=ToiletsListDto)
 async def get_toilets_by_fields(
     mall_id: int,
     gender: Optional[str] = None,
     level: Optional[str] = None,
     description: Optional[str] = None,
     service: ToiletsService = Depends(),
-) -> Sequence[ToiletDto]:
+) -> ToiletsListDto:
     toilets: Sequence[Toilet] = await service.get_toilets_by_fields(
         mall_id, gender, level, description
     )
-    return [ToiletDto.model_validate(toilet) for toilet in toilets]
+    toilets_list_dto: ToiletsListDto = ToiletsListDto(mall_id=mall_id, toilets=[ToiletDto.model_validate(toilet) for toilet in toilets])
+    return toilets_list_dto
 
 
-@router.get("/", response_model=Sequence[ToiletDto])
+@router.get("/", response_model=ToiletsListDto)
 async def get_toilets(
     mall_id: int,
     service: ToiletsService = Depends(),
-) -> Sequence[ToiletDto]:
+) -> ToiletsListDto:
     toilets: Sequence[Toilet] = await service.get_toilets(mall_id)
-    return [ToiletDto.model_validate(toilet) for toilet in toilets]
+    toilets_list_dto: ToiletsListDto = ToiletsListDto(mall_id=mall_id, toilets=[ToiletDto.model_validate(toilet) for toilet in toilets])
+    return toilets_list_dto
 
 
 @router.get("/{toilet_id}", response_model=ToiletDto)

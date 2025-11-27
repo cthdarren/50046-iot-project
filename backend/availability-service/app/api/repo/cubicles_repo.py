@@ -1,6 +1,6 @@
-from db.models import Cubicle, CubicleState
+from db.models import Cubicle, CubicleState, CubicleEvent
 from sqlalchemy import select, delete
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 from schemas.request_dto.cubicle_request_dto import CubicleRequestDto
 from typing import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,40 +38,62 @@ class CubiclesRepo:
             select(Cubicle)
             .where(Cubicle.toilet_id == toilet_id)
             .options(
-                selectinload(Cubicle.cubicle_state),
+                joinedload(Cubicle.cubicle_state),
             )
         )
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        cubicles = result.scalars().all()
+        for cubicle in cubicles:
+            if cubicle.cubicle_state:
+                await self.db.refresh(cubicle.cubicle_state)
+        return cubicles
 
-    async def get_cubicle(self, cubicle_id: int) -> Cubicle | None:
+    async def get_cubicle(self, toilet_id: int, cubicle_id: int) -> Cubicle | None:
         stmt = (
             select(Cubicle)
-            .where(Cubicle.id == cubicle_id)
+            .where(Cubicle.id == cubicle_id, Cubicle.toilet_id == toilet_id)
             .options(
-                selectinload(Cubicle.cubicle_state),
+                joinedload(Cubicle.cubicle_state),
             )
         )
         result = await self.db.execute(stmt)
-        return result.scalar_one_or_none()
+        cubicle = result.scalar_one_or_none()
+        if cubicle and cubicle.cubicle_state:
+            await self.db.refresh(cubicle.cubicle_state)
+        return cubicle
 
     async def update_cubicle(
-        self, cubicle_id: int, cubicle_req_dto: CubicleRequestDto
+        self, cubicle: Cubicle, cubicle_req_dto: CubicleRequestDto
     ) -> Cubicle:
-        cubicle = await self.get_cubicle(cubicle_id)
         for key, value in cubicle_req_dto.model_dump(exclude_unset=True).items():
             setattr(cubicle, key, value)
         self.db.add(cubicle)
+        await self.db.flush()
         await self.db.commit()
-        await self.db.refresh(cubicle)
-        stmt = select(Cubicle).where(Cubicle.id == cubicle_id).options(selectinload(Cubicle.cubicle_state))
-        result = await self.db.execute(stmt)
-        return result.scalar_one()
+        await self.db.refresh(cubicle, attribute_names=["cubicle_state"])
+        return cubicle
 
     async def delete_cubicle(self, cubicle_id: int) -> bool:
-        statement_cubicle_state = delete(CubicleState).where(CubicleState.cubicle_id == cubicle_id)
+        statement_cubicle_state = delete(CubicleState).where(
+            CubicleState.cubicle_id == cubicle_id
+        )
         statement = delete(Cubicle).where(Cubicle.id == cubicle_id)
         await self.db.execute(statement_cubicle_state)
         await self.db.execute(statement)
         await self.db.commit()
         return True
+
+    async def get_cubicle_state(self, cubicle_id: int) -> CubicleState | None:
+        stmt = select(CubicleState).where(CubicleState.cubicle_id == cubicle_id)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_latest_cubicle_event(self, cubicle_id: int) -> CubicleEvent | None:
+        stmt = (
+            select(CubicleEvent)
+            .where(CubicleEvent.cubicle_id == cubicle_id)
+            .order_by(CubicleEvent.timestamp.desc())
+            .limit(1)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()

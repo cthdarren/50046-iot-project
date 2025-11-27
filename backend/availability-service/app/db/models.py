@@ -32,7 +32,7 @@ class Cubicle(Base):
 class CubicleState(Base):
     __tablename__ = "cubicle_states"
     id = Column(Integer, primary_key=True)
-    cubicle_id = Column(Integer, ForeignKey("cubicles.id"), nullable=False)
+    cubicle_id = Column(Integer, ForeignKey("cubicles.id"), nullable=False, unique=True)
     occupied = Column(Boolean, nullable=False)
     toilet_roll_percentage = Column(Float)
     updated_at = Column(DateTime, default=datetime.now)

@@ -38,9 +38,8 @@ export const cubicleEventHandler = async (event: any) => {
   try {
     const dbClient = await getClient();
     await ensureCubicleExists(dbClient, event.cubicle_id);
-    await dbClient.query("INSERT INTO cubicle_events (cubicle_id, timestamp, occupied, toilet_roll_percentage) VALUES ($1, $2, $3, $4)", [
+    await dbClient.query("INSERT INTO cubicle_events (cubicle_id, occupied, toilet_roll_percentage, timestamp) VALUES ($1, $2, $3, CURRENT_TIMESTAMP)", [
       event.cubicle_id,
-      event.timestamp,
       event.occupied,
       event.toilet_roll_percentage,
     ]);
@@ -63,11 +62,10 @@ export const cubicleStateHandler = async (event: any) => {
   try {
     const dbClient = await getClient();
     await ensureCubicleExists(dbClient, event.cubicle_id);
-    await dbClient.query("INSERT INTO cubicle_states (cubicle_id, occupied, toilet_roll_percentage, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (cubicle_id) DO UPDATE SET occupied = $2, toilet_roll_percentage = $3, updated_at = $4", [
+    await dbClient.query("INSERT INTO cubicle_states (cubicle_id, occupied, toilet_roll_percentage) VALUES ($1, $2, $3) ON CONFLICT (cubicle_id) DO UPDATE SET occupied = $2, toilet_roll_percentage = $3, updated_at = CURRENT_TIMESTAMP", [
       event.cubicle_id,
       event.occupied,
       event.toilet_roll_percentage,
-      event.updated_at,
     ]);
     return { status: "ok" };
   } catch (error) {
