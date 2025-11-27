@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
@@ -26,6 +26,7 @@ services:
     volumes:
       - mosquitto_data:/mosquitto/data
       - mosquitto_config:/mosquitto/config
+      - ./mosquitto-config/mosquitto.conf:/mosquitto/config/mosquitto.conf
     # You can place a mosquitto.conf in ./mosquitto-config if needed.
 
   localstack:
@@ -48,58 +49,54 @@ services:
       dockerfile: Dockerfile
     container_name: lambda
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      availability-service:
+        condition: service_started
     ports:
       - "8080:8080" # Local invocation endpoint
 
-  backend:
+  availability-service:
     # Placeholder backend service. Replace command once you add code.
     build:
-      context: ./backend
-    container_name: backend
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      MQTT_HOST: mqtt
-      MQTT_PORT: 1883
+      context: ./backend/availability-service
+      dockerfile: Dockerfile
+    container_name: availability-service
+    env_file:
+      - .env
     depends_on:
-      - postgres
-      - mqtt
-    command:
-      [
-        "sh",
-        "-c",
-        "echo 'Add backend code to start your API' && sleep infinity",
-      ]
+      postgres:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
     ports:
-      - "3001:3001" # Adjust when backend implemented
+      - "${AVAILABILITY_SERVICE_PORT}:${AVAILABILITY_SERVICE_PORT}"
+    volumes:
+      - ./.env:/app/.env
 
-  frontend:
-    # Placeholder frontend service. Replace with your chosen framework dev server.
-    build:
-      context: ./frontend
-    container_name: frontend
-    environment:
-      VITE_API_BASE_URL: http://localhost:3001
-    command:
-      [
-        "sh",
-        "-c",
-        "echo 'Add frontend code to start your dev server' && sleep infinity",
-      ]
-    ports:
-      - "5173:5173" # Common Vite port; adjust per framework
-    depends_on:
-      - backend
+  # frontend:
+  #   # Placeholder frontend service. Replace with your chosen framework dev server.
+  #   build:
+  #     context: ./frontend
+  #   container_name: frontend
+  #   environment:
+  #     VITE_API_BASE_URL: http://localhost:3001
+  #   command:
+  #     [
+  #       "sh",
+  #       "-c",
+  #       "echo 'Add frontend code to start your dev server' && sleep infinity",
+  #     ]
+  #   ports:
+  #     - "5173:5173" # Common Vite port; adjust per framework
+  #   depends_on:
+  #     - backend
 
   bridge-mqtt-to-lambda:
     # Simple Node subscriber that listens to MQTT and invokes local lambda HTTP endpoint.
@@ -108,18 +105,13 @@ services:
     volumes:
       - ./scripts:/app
     environment:
-      MQTT_HOST: mqtt
-      MQTT_PORT: 1883
+      MQTT_HOST: ${MQTT_HOST}
+      MQTT_PORT: ${MQTT_PORT}
       LAMBDA_INVOKE_URL: http://lambda:8080/invoke
     depends_on:
       - mqtt
       - lambda
-    command:
-      [
-        "sh",
-        "-c",
-        "npm init -y >/dev/null && npm install mqtt axios && node mqtt-to-lambda.js",
-      ]
+    command: ["node", "mqtt-to-lambda.js"]
 
 volumes:
   pg_data:

@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     DB_HOST: str
@@ -6,9 +6,7 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASSWORD: str
     DB_NAME: str
-    
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+
+    model_config = SettingsConfigDict(extra="ignore")
 
 settings = Settings()

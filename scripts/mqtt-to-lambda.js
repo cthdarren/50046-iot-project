@@ -3,10 +3,12 @@ import mqtt from "mqtt";
 import axios from "axios";
 
 const host = process.env.MQTT_HOST || "mqtt";
-const port = process.env.MQTT_PORT || "1883";
+const port = process.env.MQTT_PORT || 1883;
 const lambdaUrl = process.env.LAMBDA_INVOKE_URL || "http://lambda:8080/invoke";
 
-const client = mqtt.connect(`mqtt://${host}:${port}`);
+const client = mqtt.connect(`mqtt://${host}:${port}`, {
+  reconnectPeriod: 1000,
+});
 
 client.on("connect", () => {
   console.log("Bridge connected to MQTT broker");
