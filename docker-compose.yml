@@ -13,7 +13,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
+      test: [ "CMD", "pg_isready", "-U", "${DB_USER}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -76,7 +76,7 @@ services:
       mqtt:
         condition: service_started
     ports:
-      - "${AVAILABILITY_SERVICE_PORT}:${AVAILABILITY_SERVICE_PORT}"
+      - "${AVAILABILITY_SERVICE_PORT}:8001"
     volumes:
       - ./.env:/app/.env
 
@@ -111,13 +111,14 @@ services:
     depends_on:
       - mqtt
       - lambda
-    command: ["node", "mqtt-to-lambda.js"]
+    command: [ "node", "mqtt-to-lambda.js" ]
 
 volumes:
   pg_data:
   mosquitto_data:
   mosquitto_config:
   localstack_data:
+
 
 networks:
   default:
