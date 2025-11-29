@@ -29,8 +29,8 @@
 │  │  │                            │                          │     │   │
 │  │  │  ┌──────────────────┐      │                          │     │   │
 │  │  │  │  ECS Fargate     │──────┘                          │     │   │
-│  │  │  │  Task (Backend)  │                                 │     │   │
-│  │  │  │  Port: 8001      │────┐                            │     │   │
+│  │  │  │  Task (Backend)  │  ◄── Only 1 task (desired=1)    │     │   │
+│  │  │  │  Port: 8001      │────┐ Could deploy to AZ-b       │     │   │
 │  │  │  │  (service_sg)    │    │                            │     │   │
 │  │  │  └──────────────────┘    │                            │     │   │
 │  │  │                          │                            │     │   │
@@ -57,10 +57,11 @@
 │  │  ┌──────────────────────────────────────────────────────┐      │   │
 │  │  │  Private Subnet AZ-b (10.0.2.0/24)                   │      │   │
 │  │  │                                                      │      │   │
-│  │  │  ┌──────────────────┐                                │      │   │
-│  │  │  │  Task (Replica)  │                                │      │   │
-│  │  │  │  ECS Fargate     │  (Multi-AZ for HA)             │      │   │
-│  │  │  └──────────────────┘                                │      │   │
+│  │  │  [No ECS tasks currently deployed here]              │      │   │
+│  │  │                                                      │      │   │
+│  │  │  * Required for RDS multi-AZ subnet group            │      │   │
+│  │  │  * Available for Lambda failover                     │      │   │
+│  │  │  * Available if ECS scales up (desired_count > 1)    │      │   │
 │  │  └──────────────────────────────────────────────────────┘      │   │
 │  └────────────────────────────────────────────────────────────────┘   │
 │                                                                       │
@@ -141,7 +142,8 @@ ECS Task / Lambda
 ### Compute
 - **ECS Fargate**: Runs containerized backend API (port 8001)
   - Task: 256 CPU, 512 MB memory
-  - Multi-AZ deployment (private subnets in 2 AZs)
+  - **Current deployment**: 1 task (desired_count = 1)
+  - Configured for 2 AZs but only 1 task runs at a time
   
 - **Lambda**: Handles IoT Core messages
   - Runtime: Node.js 20.x
@@ -151,6 +153,8 @@ ECS Task / Lambda
 - **VPC**: 10.0.0.0/16
 - **Public Subnets**: 10.0.10.0/24, 10.0.11.0/24
 - **Private Subnets**: 10.0.1.0/24, 10.0.2.0/24
+  - Both subnets required for RDS multi-AZ subnet group
+  - ECS service configured for both but only deploys 1 task
 - **NAT Gateway**: Provides internet access for private resources
 - **Internet Gateway**: Provides internet access for public subnets
 
