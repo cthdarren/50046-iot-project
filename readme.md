@@ -13,7 +13,7 @@ To execute this we have come up with the following solution.
 
 ## System Diagram
 
-![system design image](assets/images/cloud_and_iot_sys_diagram.png)
+![system design image](mermaid/system-diagram.svg)
 
 ## Running the Project
 
