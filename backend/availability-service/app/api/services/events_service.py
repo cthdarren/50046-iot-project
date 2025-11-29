@@ -1,10 +1,10 @@
 from db.database import get_db
 from ..repo.events_repo import EventsRepo
-from shared.core.period import PeriodRange, Period
+from shared.core.period import PeriodRange
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
-from typing import Sequence
-from db.models import CubicleState, Toilet
+from typing import Sequence, Optional, List
+from db.models import CubicleEvent, CubicleState, Cubicle, Toilet
 from api.services.toilets_service import ToiletsService
 from api.services.cubicles_service import CubiclesService
 from core.exceptions import NotFoundException
@@ -13,6 +13,16 @@ from shared.schemas.latest_state import (
     LatestToiletStateDto,
     LatestMallStateDto,
 )
+from shared.schemas.state import (
+    FilteredCubicleEventDto,
+    FilteredToiletEventDto,
+    FilteredMallEventDto,
+    ToiletEventDto,
+    CubicleEventDto,
+    CubicleEventListDto,
+)
+from datetime import datetime
+from typing import Union
 
 
 class EventsService:
@@ -26,21 +36,9 @@ class EventsService:
         self.toilets_service = toilets_service
         self.cubicles_service = cubicles_service
 
-    async def get_events(
-        self,
-        period_range: PeriodRange | None = None,
-        period: Period | None = None,
-        mall_id: int | None = None,
-        toilet_id: int | None = None,
-        cubicle_id: int | None = None,
-    ):
-        return await self.events_repo.get_events(
-            period_range, period, mall_id, toilet_id, cubicle_id
-        )
-
     async def get_latest_cubicle_state(
         self, mall_id: int, toilet_id: int, cubicle_id: int
-    ):
+    ) -> LatestCubicleStateDto:
         if not await self.cubicles_service.get_cubicle(
             mall_id=mall_id, toilet_id=toilet_id, cubicle_id=cubicle_id
         ):
@@ -84,7 +82,7 @@ class EventsService:
             ],
         )
 
-    async def get_latest_mall_state(self, mall_id: int):
+    async def get_latest_mall_state(self, mall_id: int) -> LatestMallStateDto:
         toilets: Sequence[Toilet] = await self.toilets_service.get_toilets(
             mall_id=mall_id
         )
@@ -112,3 +110,117 @@ class EventsService:
                 )
             )
         return latest_mall_state
+
+    async def get_events(
+        self,
+        mall_id: int,
+        toilet_id: Optional[int] = None,
+        cubicle_id: Optional[int] = None,
+        period_range: PeriodRange = PeriodRange(
+            start_date=datetime.now(), end_date=datetime.now()
+        ),
+    ) -> Union[FilteredCubicleEventDto, FilteredToiletEventDto, FilteredMallEventDto]:
+
+        if cubicle_id:
+            if toilet_id:
+                toilet_states: FilteredToiletEventDto = (
+                    await self.get_filtered_toilet_events(
+                        mall_id=mall_id,
+                        toilet_id=toilet_id,
+                        period_range=period_range,
+                    )
+                )
+                return toilet_states
+            cubicle_states: FilteredCubicleEventDto = (
+                await self.get_filtered_cubicle_events(
+                    cubicle_id=cubicle_id,
+                    period_range=period_range,
+                )
+            )
+            return cubicle_states
+        mall_states: FilteredMallEventDto = await self.get_filtered_mall_events(
+            mall_id=mall_id,
+            period_range=period_range,
+        )
+        return mall_states
+
+    async def get_filtered_cubicle_events(
+        self, cubicle_id: int, period_range: PeriodRange
+    ) -> FilteredCubicleEventDto:
+        cubicle_events: Sequence[CubicleEvent] = (
+            await self.events_repo.get_filtered_cubicle_events(
+                cubicle_id=cubicle_id,
+                period_range=period_range,
+            )
+        )
+        cubicle_events_dto: List[CubicleEventDto] = []
+        for cubicle_event in cubicle_events:
+            cubicle_events_dto.append(
+                CubicleEventDto(
+                    occupied=cubicle_event.__getattribute__("occupied"),
+                    toilet_roll_percentage=cubicle_event.__getattribute__(
+                        "toilet_roll_percentage"
+                    ),
+                    updated_at=cubicle_event.__getattribute__("timestamp"),
+                )
+            )
+        return FilteredCubicleEventDto(
+            cubicle_id=cubicle_id,
+            events=cubicle_events_dto,
+            period_range=period_range,
+        )
+
+    async def get_filtered_toilet_events(
+        self,
+        mall_id: int,
+        toilet_id: int,
+        period_range: PeriodRange,
+    ) -> FilteredToiletEventDto:
+        cubicles: Sequence[Cubicle] = await self.cubicles_service.get_cubicles(
+            mall_id=mall_id, toilet_id=toilet_id
+        )
+        filtered_toilet_event_dto: FilteredToiletEventDto = FilteredToiletEventDto(
+            toilet_id=toilet_id,
+            cubicles=[],
+            period_range=period_range,
+        )
+
+        for cubicle in cubicles:
+            cubicle_events: FilteredCubicleEventDto = (
+                await self.get_filtered_cubicle_events(
+                    cubicle_id=cubicle.__getattribute__("id"),
+                    period_range=period_range,
+                )
+            )
+            filtered_toilet_event_dto.cubicles.append(
+                CubicleEventListDto(
+                    cubicle_id=cubicle.__getattribute__("id"),
+                    events=cubicle_events.events,
+                )
+            )
+
+        return filtered_toilet_event_dto
+
+    async def get_filtered_mall_events(
+        self, mall_id: int, period_range: PeriodRange
+    ) -> FilteredMallEventDto:
+        toilets: Sequence[Toilet] = await self.toilets_service.get_toilets(
+            mall_id=mall_id
+        )
+        latest_mall_event: FilteredMallEventDto = FilteredMallEventDto(
+            mall_id=mall_id, toilets=[], period_range=period_range
+        )
+        for toilet in toilets:
+            toilet_events: FilteredToiletEventDto = (
+                await self.get_filtered_toilet_events(
+                    toilet_id=toilet.__getattribute__("id"),
+                    period_range=period_range,
+                    mall_id=mall_id,
+                )
+            )
+            latest_mall_event.toilets.append(
+                ToiletEventDto(
+                    cubicles=toilet_events.cubicles,
+                )
+            )
+        return latest_mall_event
