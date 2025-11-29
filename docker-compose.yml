@@ -65,8 +65,8 @@ services:
   availability-service:
     # Placeholder backend service. Replace command once you add code.
     build:
-      context: ./backend/availability-service
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: availability-service/Dockerfile
     container_name: availability-service
     env_file:
       - .env
