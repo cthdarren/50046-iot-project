@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..repo.cubicles_repo import CubiclesRepo
 from ..services.toilets_service import ToiletsService
 from schemas.request_dto.cubicle_request_dto import CubicleRequestDto
-from core.exceptions import NotFoundException
+from shared.core.exceptions import NotFoundException
 from typing import Sequence
 from db.models import Cubicle
 

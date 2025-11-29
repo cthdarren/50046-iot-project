@@ -4,7 +4,7 @@ from api.routers.toilets_router import router as toilets_router
 from api.routers.cubicles_router import router as cubicles_router
 from api.routers.events_router import router as events_router
 from contextlib import asynccontextmanager
-from core.exceptions import ApiException, exception_handler
+from shared.core.exceptions import ApiException, exception_handler
 from db.database import engine, wait_for_db
 from db.models import Base
 

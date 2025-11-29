@@ -16,6 +16,7 @@ class CubicleEventListDto(BaseModel):
 
 
 class ToiletEventDto(BaseModel):
+    toilet_id: int
     cubicles: List[CubicleEventListDto]
 
 

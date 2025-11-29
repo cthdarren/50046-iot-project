@@ -7,7 +7,7 @@ from typing import Sequence, Optional, List
 from db.models import CubicleEvent, CubicleState, Cubicle, Toilet
 from api.services.toilets_service import ToiletsService
 from api.services.cubicles_service import CubiclesService
-from core.exceptions import NotFoundException
+from shared.core.exceptions import NotFoundException
 from shared.schemas.latest_state import (
     LatestCubicleStateDto,
     LatestToiletStateDto,
@@ -121,23 +121,23 @@ class EventsService:
         ),
     ) -> Union[FilteredCubicleEventDto, FilteredToiletEventDto, FilteredMallEventDto]:
 
-        if cubicle_id:
-            if toilet_id:
-                toilet_states: FilteredToiletEventDto = (
-                    await self.get_filtered_toilet_events(
-                        mall_id=mall_id,
-                        toilet_id=toilet_id,
+        if toilet_id:
+            if cubicle_id:
+                cubicle_states: FilteredCubicleEventDto = (
+                    await self.get_filtered_cubicle_events(
+                        cubicle_id=cubicle_id,
                         period_range=period_range,
                     )
                 )
-                return toilet_states
-            cubicle_states: FilteredCubicleEventDto = (
-                await self.get_filtered_cubicle_events(
-                    cubicle_id=cubicle_id,
+                return cubicle_states
+            toilet_states: FilteredToiletEventDto = (
+                await self.get_filtered_toilet_events(
+                    mall_id=mall_id,
+                    toilet_id=toilet_id,
                     period_range=period_range,
                 )
             )
-            return cubicle_states
+            return toilet_states
         mall_states: FilteredMallEventDto = await self.get_filtered_mall_events(
             mall_id=mall_id,
             period_range=period_range,
@@ -220,6 +220,7 @@ class EventsService:
             )
             latest_mall_event.toilets.append(
                 ToiletEventDto(
+                    toilet_id=toilet.__getattribute__("id"),
                     cubicles=toilet_events.cubicles,
                 )
             )

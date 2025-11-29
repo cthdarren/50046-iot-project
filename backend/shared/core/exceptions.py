@@ -1,6 +1,6 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from core.error_codes import ErrorCodes
+from shared.core.error_codes import ErrorCodes
 
 
 class ApiException(Exception):
