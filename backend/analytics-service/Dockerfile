@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1.5
 FROM python:3.14-bookworm AS base
+ENV AVAILABILITY_SERVICE_URL="http://availability-service"
+ENV AVAILABILITY_SERVICE_PORT=$AVAILABILITY_SERVICE_PORT
 # set working directory inside the container to /app
 WORKDIR /app
 # Install system dependencies (psycopg, uvicorn performance)

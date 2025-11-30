@@ -4,16 +4,19 @@ from core.enum import AggregationLevel
 from typing import List, Union
 from datetime import datetime
 
-class HourlyAggregationItem(BaseModel):
-    hour: datetime
+class AggregationItem(BaseModel):
     occupied_count: int
 
-class DailyAggregationItem(BaseModel):
+class HourlyAggregationItem(AggregationItem):
+    hour: datetime
+
+class DailyAggregationItem(AggregationItem):
     day: datetime
-    occupied_count: int
 
 class AggregationDto(BaseModel):
     frequency: Frequency
     period_range: PeriodRange
     aggregation_level: AggregationLevel
-    aggregation: List[Union[HourlyAggregationItem, DailyAggregationItem]]
+    aggregation: Union[List[HourlyAggregationItem], List[DailyAggregationItem]]
+    peak: datetime | None = None
+    lowest: datetime | None = None
