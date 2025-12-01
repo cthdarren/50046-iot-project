@@ -21,12 +21,17 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * Get Malls
  */
-export const getMallsMallsGet = <ThrowOnError extends boolean = false>(options?: Options<GetMallsMallsGetData, ThrowOnError>) => (options?.client ?? client).get<GetMallsMallsGetResponses, unknown, ThrowOnError>({ url: '/malls/', ...options });
+export const getMallsMallsGet = <ThrowOnError extends boolean = false>(options?: Options<GetMallsMallsGetData, ThrowOnError>) => (options?.client ?? client).get<GetMallsMallsGetResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/malls/',
+    ...options
+});
 
 /**
  * Create Mall
  */
 export const createMallMallsPost = <ThrowOnError extends boolean = false>(options: Options<CreateMallMallsPostData, ThrowOnError>) => (options.client ?? client).post<CreateMallMallsPostResponses, CreateMallMallsPostErrors, ThrowOnError>({
+    responseType: 'json',
     url: '/malls/',
     ...options,
     headers: {
@@ -38,17 +43,26 @@ export const createMallMallsPost = <ThrowOnError extends boolean = false>(option
 /**
  * Delete Mall
  */
-export const deleteMallMallsMallIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteMallMallsMallIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteMallMallsMallIdDeleteResponses, DeleteMallMallsMallIdDeleteErrors, ThrowOnError>({ url: '/malls/{mall_id}', ...options });
+export const deleteMallMallsMallIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteMallMallsMallIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteMallMallsMallIdDeleteResponses, DeleteMallMallsMallIdDeleteErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/malls/{mall_id}',
+    ...options
+});
 
 /**
  * Get Mall
  */
-export const getMallMallsMallIdGet = <ThrowOnError extends boolean = false>(options: Options<GetMallMallsMallIdGetData, ThrowOnError>) => (options.client ?? client).get<GetMallMallsMallIdGetResponses, GetMallMallsMallIdGetErrors, ThrowOnError>({ url: '/malls/{mall_id}', ...options });
+export const getMallMallsMallIdGet = <ThrowOnError extends boolean = false>(options: Options<GetMallMallsMallIdGetData, ThrowOnError>) => (options.client ?? client).get<GetMallMallsMallIdGetResponses, GetMallMallsMallIdGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/malls/{mall_id}',
+    ...options
+});
 
 /**
  * Update Mall
  */
 export const updateMallMallsMallIdPut = <ThrowOnError extends boolean = false>(options: Options<UpdateMallMallsMallIdPutData, ThrowOnError>) => (options.client ?? client).put<UpdateMallMallsMallIdPutResponses, UpdateMallMallsMallIdPutErrors, ThrowOnError>({
+    responseType: 'json',
     url: '/malls/{mall_id}',
     ...options,
     headers: {
@@ -60,12 +74,17 @@ export const updateMallMallsMallIdPut = <ThrowOnError extends boolean = false>(o
 /**
  * Get Toilets
  */
-export const getToiletsMallsMallIdToiletsGet = <ThrowOnError extends boolean = false>(options: Options<GetToiletsMallsMallIdToiletsGetData, ThrowOnError>) => (options.client ?? client).get<GetToiletsMallsMallIdToiletsGetResponses, GetToiletsMallsMallIdToiletsGetErrors, ThrowOnError>({ url: '/malls/{mall_id}/toilets/', ...options });
+export const getToiletsMallsMallIdToiletsGet = <ThrowOnError extends boolean = false>(options: Options<GetToiletsMallsMallIdToiletsGetData, ThrowOnError>) => (options.client ?? client).get<GetToiletsMallsMallIdToiletsGetResponses, GetToiletsMallsMallIdToiletsGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/malls/{mall_id}/toilets/',
+    ...options
+});
 
 /**
  * Create Toilet
  */
 export const createToiletMallsMallIdToiletsPost = <ThrowOnError extends boolean = false>(options: Options<CreateToiletMallsMallIdToiletsPostData, ThrowOnError>) => (options.client ?? client).post<CreateToiletMallsMallIdToiletsPostResponses, CreateToiletMallsMallIdToiletsPostErrors, ThrowOnError>({
+    responseType: 'json',
     url: '/malls/{mall_id}/toilets/',
     ...options,
     headers: {
@@ -77,17 +96,26 @@ export const createToiletMallsMallIdToiletsPost = <ThrowOnError extends boolean 
 /**
  * Delete Toilet
  */
-export const deleteToiletMallsMallIdToiletsToiletIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteToiletMallsMallIdToiletsToiletIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteToiletMallsMallIdToiletsToiletIdDeleteResponses, DeleteToiletMallsMallIdToiletsToiletIdDeleteErrors, ThrowOnError>({ url: '/malls/{mall_id}/toilets/{toilet_id}', ...options });
+export const deleteToiletMallsMallIdToiletsToiletIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteToiletMallsMallIdToiletsToiletIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteToiletMallsMallIdToiletsToiletIdDeleteResponses, DeleteToiletMallsMallIdToiletsToiletIdDeleteErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/malls/{mall_id}/toilets/{toilet_id}',
+    ...options
+});
 
 /**
  * Get Toilet
  */
-export const getToiletMallsMallIdToiletsToiletIdGet = <ThrowOnError extends boolean = false>(options: Options<GetToiletMallsMallIdToiletsToiletIdGetData, ThrowOnError>) => (options.client ?? client).get<GetToiletMallsMallIdToiletsToiletIdGetResponses, GetToiletMallsMallIdToiletsToiletIdGetErrors, ThrowOnError>({ url: '/malls/{mall_id}/toilets/{toilet_id}', ...options });
+export const getToiletMallsMallIdToiletsToiletIdGet = <ThrowOnError extends boolean = false>(options: Options<GetToiletMallsMallIdToiletsToiletIdGetData, ThrowOnError>) => (options.client ?? client).get<GetToiletMallsMallIdToiletsToiletIdGetResponses, GetToiletMallsMallIdToiletsToiletIdGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/malls/{mall_id}/toilets/{toilet_id}',
+    ...options
+});
 
 /**
  * Update Toilet
  */
 export const updateToiletMallsMallIdToiletsToiletIdPut = <ThrowOnError extends boolean = false>(options: Options<UpdateToiletMallsMallIdToiletsToiletIdPutData, ThrowOnError>) => (options.client ?? client).put<UpdateToiletMallsMallIdToiletsToiletIdPutResponses, UpdateToiletMallsMallIdToiletsToiletIdPutErrors, ThrowOnError>({
+    responseType: 'json',
     url: '/malls/{mall_id}/toilets/{toilet_id}',
     ...options,
     headers: {
@@ -99,12 +127,17 @@ export const updateToiletMallsMallIdToiletsToiletIdPut = <ThrowOnError extends b
 /**
  * Get Cubicles
  */
-export const getCubiclesMallsMallIdToiletsToiletIdCubiclesGet = <ThrowOnError extends boolean = false>(options: Options<GetCubiclesMallsMallIdToiletsToiletIdCubiclesGetData, ThrowOnError>) => (options.client ?? client).get<GetCubiclesMallsMallIdToiletsToiletIdCubiclesGetResponses, GetCubiclesMallsMallIdToiletsToiletIdCubiclesGetErrors, ThrowOnError>({ url: '/malls/{mall_id}/toilets/{toilet_id}/cubicles/', ...options });
+export const getCubiclesMallsMallIdToiletsToiletIdCubiclesGet = <ThrowOnError extends boolean = false>(options: Options<GetCubiclesMallsMallIdToiletsToiletIdCubiclesGetData, ThrowOnError>) => (options.client ?? client).get<GetCubiclesMallsMallIdToiletsToiletIdCubiclesGetResponses, GetCubiclesMallsMallIdToiletsToiletIdCubiclesGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/malls/{mall_id}/toilets/{toilet_id}/cubicles/',
+    ...options
+});
 
 /**
  * Create Cubicle
  */
 export const createCubicleMallsMallIdToiletsToiletIdCubiclesPost = <ThrowOnError extends boolean = false>(options: Options<CreateCubicleMallsMallIdToiletsToiletIdCubiclesPostData, ThrowOnError>) => (options.client ?? client).post<CreateCubicleMallsMallIdToiletsToiletIdCubiclesPostResponses, CreateCubicleMallsMallIdToiletsToiletIdCubiclesPostErrors, ThrowOnError>({
+    responseType: 'json',
     url: '/malls/{mall_id}/toilets/{toilet_id}/cubicles/',
     ...options,
     headers: {
@@ -116,17 +149,26 @@ export const createCubicleMallsMallIdToiletsToiletIdCubiclesPost = <ThrowOnError
 /**
  * Delete Cubicle
  */
-export const deleteCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdDeleteResponses, DeleteCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdDeleteErrors, ThrowOnError>({ url: '/malls/{mall_id}/toilets/{toilet_id}/cubicles/{cubicle_id}', ...options });
+export const deleteCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdDeleteResponses, DeleteCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdDeleteErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/malls/{mall_id}/toilets/{toilet_id}/cubicles/{cubicle_id}',
+    ...options
+});
 
 /**
  * Get Cubicle
  */
-export const getCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdGet = <ThrowOnError extends boolean = false>(options: Options<GetCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdGetData, ThrowOnError>) => (options.client ?? client).get<GetCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdGetResponses, GetCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdGetErrors, ThrowOnError>({ url: '/malls/{mall_id}/toilets/{toilet_id}/cubicles/{cubicle_id}', ...options });
+export const getCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdGet = <ThrowOnError extends boolean = false>(options: Options<GetCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdGetData, ThrowOnError>) => (options.client ?? client).get<GetCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdGetResponses, GetCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/malls/{mall_id}/toilets/{toilet_id}/cubicles/{cubicle_id}',
+    ...options
+});
 
 /**
  * Update Cubicle
  */
 export const updateCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdPut = <ThrowOnError extends boolean = false>(options: Options<UpdateCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdPutData, ThrowOnError>) => (options.client ?? client).put<UpdateCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdPutResponses, UpdateCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdPutErrors, ThrowOnError>({
+    responseType: 'json',
     url: '/malls/{mall_id}/toilets/{toilet_id}/cubicles/{cubicle_id}',
     ...options,
     headers: {
@@ -138,14 +180,26 @@ export const updateCubicleMallsMallIdToiletsToiletIdCubiclesCubicleIdPut = <Thro
 /**
  * Get Events
  */
-export const getEventsEventsGet = <ThrowOnError extends boolean = false>(options: Options<GetEventsEventsGetData, ThrowOnError>) => (options.client ?? client).get<GetEventsEventsGetResponses, GetEventsEventsGetErrors, ThrowOnError>({ url: '/events/', ...options });
+export const getEventsEventsGet = <ThrowOnError extends boolean = false>(options: Options<GetEventsEventsGetData, ThrowOnError>) => (options.client ?? client).get<GetEventsEventsGetResponses, GetEventsEventsGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/events/',
+    ...options
+});
 
 /**
  * Get Latest State
  */
-export const getLatestStateEventsLatestGet = <ThrowOnError extends boolean = false>(options: Options<GetLatestStateEventsLatestGetData, ThrowOnError>) => (options.client ?? client).get<GetLatestStateEventsLatestGetResponses, GetLatestStateEventsLatestGetErrors, ThrowOnError>({ url: '/events/latest', ...options });
+export const getLatestStateEventsLatestGet = <ThrowOnError extends boolean = false>(options: Options<GetLatestStateEventsLatestGetData, ThrowOnError>) => (options.client ?? client).get<GetLatestStateEventsLatestGetResponses, GetLatestStateEventsLatestGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/events/latest',
+    ...options
+});
 
 /**
  * Root
  */
-export const rootGet = <ThrowOnError extends boolean = false>(options?: Options<RootGetData, ThrowOnError>) => (options?.client ?? client).get<RootGetResponses, unknown, ThrowOnError>({ url: '/', ...options });
+export const rootGet = <ThrowOnError extends boolean = false>(options?: Options<RootGetData, ThrowOnError>) => (options?.client ?? client).get<RootGetResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/',
+    ...options
+});

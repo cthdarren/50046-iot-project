@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { useId } from "@/context/IdContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { client } from "./services/availability/client.gen";
+
+client.setConfig({
+  baseUrl: 'http://iot-backend-alb-227826614.ap-southeast-1.elb.amazonaws.com',
+});
 
 export default function Home() {
   const { id, setId } = useId();

@@ -6,6 +6,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { IdProvider } from "@/context/IdContext";
 
+import { client as availClient } from './services/availability/client.gen';
+import { client as analyticsClient } from './services/analytics/client.gen';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -26,6 +29,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+    availClient.setConfig({
+      baseUrl: 'http://iot-backend-alb-227826614.ap-southeast-1.elb.amazonaws.com',
+    });
+
+    analyticsClient.setConfig({
+      baseUrl: 'http://iot-backend-alb-227826614.ap-southeast-1.elb.amazonaws.com',
+    });
+
   return (
     <html lang="en">
       <body

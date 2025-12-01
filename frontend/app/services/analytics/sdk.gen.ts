@@ -21,19 +21,35 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * Read Root
  */
-export const readRootAnalyticsGet = <ThrowOnError extends boolean = false>(options?: Options<ReadRootAnalyticsGetData, ThrowOnError>) => (options?.client ?? client).get<ReadRootAnalyticsGetResponses, unknown, ThrowOnError>({ url: '/analytics/', ...options });
+export const readRootAnalyticsGet = <ThrowOnError extends boolean = false>(options?: Options<ReadRootAnalyticsGetData, ThrowOnError>) => (options?.client ?? client).get<ReadRootAnalyticsGetResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/analytics/',
+    ...options
+});
 
 /**
  * Get Mall Analytics
  */
-export const getMallAnalyticsAnalyticsAggregationGet = <ThrowOnError extends boolean = false>(options: Options<GetMallAnalyticsAnalyticsAggregationGetData, ThrowOnError>) => (options.client ?? client).get<GetMallAnalyticsAnalyticsAggregationGetResponses, GetMallAnalyticsAnalyticsAggregationGetErrors, ThrowOnError>({ url: '/analytics/aggregation', ...options });
+export const getMallAnalyticsAnalyticsAggregationGet = <ThrowOnError extends boolean = false>(options: Options<GetMallAnalyticsAnalyticsAggregationGetData, ThrowOnError>) => (options.client ?? client).get<GetMallAnalyticsAnalyticsAggregationGetResponses, GetMallAnalyticsAnalyticsAggregationGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/analytics/aggregation',
+    ...options
+});
 
 /**
  * Get Toilet Roll Mean
  */
-export const getToiletRollMeanAnalyticsToiletRollMeanGet = <ThrowOnError extends boolean = false>(options: Options<GetToiletRollMeanAnalyticsToiletRollMeanGetData, ThrowOnError>) => (options.client ?? client).get<GetToiletRollMeanAnalyticsToiletRollMeanGetResponses, GetToiletRollMeanAnalyticsToiletRollMeanGetErrors, ThrowOnError>({ url: '/analytics/toilet-roll-mean', ...options });
+export const getToiletRollMeanAnalyticsToiletRollMeanGet = <ThrowOnError extends boolean = false>(options: Options<GetToiletRollMeanAnalyticsToiletRollMeanGetData, ThrowOnError>) => (options.client ?? client).get<GetToiletRollMeanAnalyticsToiletRollMeanGetResponses, GetToiletRollMeanAnalyticsToiletRollMeanGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/analytics/toilet-roll-mean',
+    ...options
+});
 
 /**
  * Read Root
  */
-export const readRootGet = <ThrowOnError extends boolean = false>(options?: Options<ReadRootGetData, ThrowOnError>) => (options?.client ?? client).get<ReadRootGetResponses, unknown, ThrowOnError>({ url: '/', ...options });
+export const readRootGet = <ThrowOnError extends boolean = false>(options?: Options<ReadRootGetData, ThrowOnError>) => (options?.client ?? client).get<ReadRootGetResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/',
+    ...options
+});
