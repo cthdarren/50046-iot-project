@@ -1,6 +1,6 @@
 # Backend Deployment Quick Reference
 
-> **One-page cheat sheet for deploying to ECR/ECS**
+> **One-page cheat sheet for deploying backend services to ECR/ECS**
 
 ---
 
@@ -9,19 +9,26 @@
 ### Deploy Everything (Recommended)
 ```bash
 cd backend
-make deploy
+make deploy-all
+```
+
+### Deploy Individual Services
+```bash
+cd backend
+make deploy-availability    # Availability service
+make deploy-analytics       # Analytics service
+```
+
+### Just Build Locally
+```bash
+make build-availability
+make build-analytics
 ```
 
 ### Just Push to ECR
 ```bash
-cd backend
-make push
-```
-
-### Deploy Specific Version
-```bash
-cd backend/scripts
-./update-ecs.sh 20240315-143022
+make push-availability
+make push-analytics
 ```
 
 ---
@@ -30,145 +37,189 @@ cd backend/scripts
 
 | Task | Command |
 |------|---------|
-| Build locally | `make build` |
-| Run locally | `make run-local` |
-| Login to ECR | `make ecr-login` |
-| Push to ECR | `make push` |
-| Full deployment | `make deploy` |
-| Check service status | `make status` |
-| List ECR images | `make list-images` |
-| Watch deployment | `make watch-deployment` |
-| Wait for stable | `make wait-for-stable` |
-| View logs | `make logs` |
-| View all commands | `make help` |
-| Clean local images | `make clean` |
+| **View all commands** | `make help` |
+| **Deploy availability** | `make deploy-availability` |
+| **Deploy analytics** | `make deploy-analytics` |
+| **Deploy both** | `make deploy-all` |
+| **Build availability** | `make build-availability` |
+| **Build analytics** | `make build-analytics` |
+| **Run availability locally** | `make run-availability` |
+| **Run analytics locally** | `make run-analytics` |
+| **Check status** | `make status-all` |
+| **View logs (availability)** | `make logs-availability` |
+| **View logs (analytics)** | `make logs-analytics` |
+| **List ECR images** | `make list-images` |
+| **Health check** | `make health-check` |
+| **Login to ECR** | `make ecr-login` |
+| **Clean local images** | `make clean` |
+| **Show project info** | `make info` |
 
 ---
 
-## 🔍 Troubleshooting Commands
+## 🔍 Monitoring & Status
 
-### Check if image exists in ECR
+### Check Service Status
 ```bash
-aws ecr list-images --repository-name iot --region ap-southeast-1
+# Both services
+make status-all
+
+# Individual services
+make status-availability
+make status-analytics
 ```
 
-### View recent images with timestamps
+### Watch Deployment
 ```bash
+# Watch availability deployment
+make watch-deployment-availability
+
+# Watch analytics deployment
+make watch-deployment-analytics
+```
+
+### Wait for Deployment
+```bash
+# Wait for availability to stabilize
+make wait-for-stable-availability
+
+# Wait for analytics to stabilize
+make wait-for-stable-analytics
+```
+
+### View Logs
+```bash
+# Availability service logs (streaming)
+make logs-availability
+
+# Analytics service logs (streaming)
+make logs-analytics
+```
+
+### Health Check
+```bash
+# Check both services via public URLs
+make health-check
+
+# Or manually
+curl $(cd ../infra && terraform output -raw alb_url)/availability/health
+```
+
+---
+
+## 🔄 Troubleshooting Commands
+
+### Authentication Issues
+```bash
+# Re-login to ECR
+make ecr-login
+```
+
+### Check AWS Configuration
+```bash
+# Verify AWS credentials and region
+make check-aws
+```
+
+### List ECR Images
+```bash
+# Show recent images with timestamps
+make list-images
+
+# Or with AWS CLI
 aws ecr describe-images \
   --repository-name iot \
   --region ap-southeast-1 \
-  --query 'sort_by(imageDetails,&imagePushedAt)[-5:].{Tag:imageTags[0],Pushed:imagePushedAt}' \
+  --query 'sort_by(imageDetails,&imagePushedAt)[-10:].{Tag:imageTags[0],Pushed:imagePushedAt}' \
   --output table
 ```
 
-### Check ECS service status
+### Check ECS Service Status
 ```bash
+# Using make
+make status-availability
+
+# Or directly with AWS CLI
 aws ecs describe-services \
   --cluster my-cluster \
-  --services iot-backend-service \
+  --services availability-service \
   --region ap-southeast-1 \
   --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount}'
 ```
 
-### View service logs
+### View Service Events
 ```bash
-aws logs tail /ecs/iot-backend --follow --region ap-southeast-1
+aws ecs describe-services \
+  --cluster my-cluster \
+  --services availability-service \
+  --region ap-southeast-1 \
+  --query 'services[0].events[0:5]'
 ```
 
-### Get ECR repository URI
+### Check Target Group Health
 ```bash
-cd infra && terraform output ecr_repository_uri
+aws elbv2 describe-target-health \
+  --target-group-arn $(cd ../infra && terraform output -raw availability_service_target_group_arn)
+```
+
+### View All Logs
+```bash
+# Using AWS CLI directly
+aws logs tail /ecs/availability-service --follow --region ap-southeast-1
+aws logs tail /ecs/analytics-service --follow --region ap-southeast-1
 ```
 
 ---
 
 ## 🔄 Rollback
 
-### List available versions
+### List Available Versions
 ```bash
-aws ecr describe-images \
-  --repository-name iot \
-  --region ap-southeast-1 \
-  --query 'sort_by(imageDetails,&imagePushedAt)[-10:].imageTags[0]'
+make list-images
 ```
 
-### Deploy previous version
+Output shows tags like:
+- `availability-latest`
+- `availability-20240315-143022`
+- `availability-a3f2c1d`
+- `analytics-latest`
+- `analytics-20240315-143022`
+- `analytics-a3f2c1d`
+
+### Deploy Specific Version
 ```bash
-cd backend/scripts
-./update-ecs.sh <TAG>
-```
-
-### Emergency: Scale down and redeploy
-```bash
-# Scale to 0
-aws ecs update-service --cluster my-cluster --service iot-backend-service --desired-count 0 --region ap-southeast-1
-
-# Deploy good version
-cd backend/scripts && ./update-ecs.sh <GOOD_TAG>
-
-# Scale back up
-aws ecs update-service --cluster my-cluster --service iot-backend-service --desired-count 1 --region ap-southeast-1
-```
-
----
-
-## 🐛 Common Errors & Fixes
-
-### Error: "no basic auth credentials"
-```bash
-make ecr-login
-```
-
-### Error: "repository does not exist"
-```bash
-cd infra && terraform apply -target=aws_ecr_repository.app
-```
-
-### Error: "cannot connect to Docker daemon"
-```bash
-sudo systemctl start docker
-# or on macOS: open Docker Desktop
-```
-
-### Error: Build fails - wrong directory
-```bash
-cd backend/availability-service && docker build -t availability-service .
-```
-
----
-
-## 📊 Monitoring
-
-### Watch deployment in real-time
-```bash
-watch -n 5 'aws ecs describe-services \
+# Update task definition to use specific revision
+aws ecs update-service \
   --cluster my-cluster \
-  --services iot-backend-service \
-  --region ap-southeast-1 \
-  --query "services[0].{Status:status,Running:runningCount,Desired:desiredCount}"'
-```
-
-### Wait for deployment to complete
-```bash
-aws ecs wait services-stable \
-  --cluster my-cluster \
-  --services iot-backend-service \
+  --service availability-service \
+  --task-definition availability-service:5 \
   --region ap-southeast-1
 ```
 
-### View deployment events
+### Emergency Rollback
 ```bash
-aws ecs describe-services \
+# Scale down
+aws ecs update-service \
   --cluster my-cluster \
-  --services iot-backend-service \
-  --region ap-southeast-1 \
-  --query 'services[0].events[0:5]'
+  --service availability-service \
+  --desired-count 0 \
+  --region ap-southeast-1
+
+# Wait 30 seconds
+sleep 30
+
+# Scale back up (will use previous task definition)
+aws ecs update-service \
+  --cluster my-cluster \
+  --service availability-service \
+  --desired-count 1 \
+  --region ap-southeast-1
 ```
 
 ---
 
 ## 🏗️ Manual Workflow (if needed)
 
+### Availability Service
 ```bash
 # 1. Login to ECR
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
@@ -177,55 +228,129 @@ aws ecr get-login-password --region ap-southeast-1 | \
   ${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com
 
 # 2. Get ECR URI
-ECR_URI=$(cd infra && terraform output -raw ecr_repository_uri)
+ECR_URI=$(cd ../infra && terraform output -raw ecr_repository_uri)
 
 # 3. Build
-cd backend/availability-service
+cd availability-service
 docker build -t availability-service:latest .
 
 # 4. Tag
-docker tag availability-service:latest ${ECR_URI}:latest
-docker tag availability-service:latest ${ECR_URI}:$(date +%Y%m%d-%H%M%S)
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+GIT_SHA=$(git rev-parse --short HEAD)
+docker tag availability-service:latest ${ECR_URI}:availability-latest
+docker tag availability-service:latest ${ECR_URI}:availability-${TIMESTAMP}
+docker tag availability-service:latest ${ECR_URI}:availability-${GIT_SHA}
 
 # 5. Push
-docker push ${ECR_URI}:latest
-docker push ${ECR_URI}:$(date +%Y%m%d-%H%M%S)
+docker push ${ECR_URI}:availability-latest
+docker push ${ECR_URI}:availability-${TIMESTAMP}
+docker push ${ECR_URI}:availability-${GIT_SHA}
 
 # 6. Update ECS
 aws ecs update-service \
   --cluster my-cluster \
-  --service iot-backend-service \
+  --service availability-service \
   --force-new-deployment \
   --region ap-southeast-1
 ```
 
----
-
-## 🔐 Prerequisites Check
-
+### Analytics Service
 ```bash
-# Check AWS credentials
-aws sts get-caller-identity
-
-# Check Docker is running
-docker info
-
-# Check Terraform state
-cd infra && terraform output
-
-# Check region is set
-echo $AWS_REGION  # Should be ap-southeast-1
+# Same steps as above, but replace:
+# - availability-service -> analytics-service
+# - availability- -> analytics-
 ```
 
 ---
 
-## 📦 Image Tags
+## 🐛 Common Errors & Fixes
 
-Every deployment creates 3 tags:
+### Error: "no basic auth credentials"
+**Cause:** Docker not authenticated with ECR
 
-- `latest` - Always points to newest build
-- `20240315-143022` - Timestamp for rollback
-- `a3f2c1d` - Git commit SHA for tracking
+**Solution:**
+```bash
+make ecr-login
+```
+
+### Error: "repository does not exist"
+**Cause:** ECR repository not created yet
+
+**Solution:**
+```bash
+cd ../infra
+terraform apply -target=aws_ecr_repository.availability_service
+```
+
+### Error: "cannot connect to Docker daemon"
+**Cause:** Docker not running
+
+**Solution:**
+```bash
+# Linux
+sudo systemctl start docker
+
+# macOS
+open /Applications/Docker.app
+```
+
+### Error: Build fails - wrong directory
+**Cause:** Running build from wrong directory
+
+**Solution:**
+```bash
+cd backend/availability-service
+docker build -t availability-service .
+```
+
+### Error: "Task failed to start"
+**Debugging steps:**
+
+```bash
+# 1. Check service events
+aws ecs describe-services \
+  --cluster my-cluster \
+  --services availability-service \
+  --region ap-southeast-1 \
+  --query 'services[0].events[0:5]'
+
+# 2. Check task logs
+make logs-availability
+
+# 3. Verify task definition
+aws ecs describe-task-definition \
+  --task-definition availability-service \
+  --region ap-southeast-1
+```
+
+### Error: Health check returns 404
+**Cause:** FastAPI app missing `root_path` configuration
+
+**Solution:**
+Ensure `main.py` has:
+```python
+app = FastAPI(
+    title="Availability Service",
+    lifespan=lifespan,
+    root_path="/availability"  # This is required!
+)
+```
+
+---
+
+## 📊 Image Tags
+
+Every deployment creates 3 tags per service:
+
+**Availability Service:**
+- `availability-latest` - Always points to newest build
+- `availability-20240315-143022` - Timestamp for rollback
+- `availability-a3f2c1d` - Git commit SHA for tracking
+
+**Analytics Service:**
+- `analytics-latest` - Always points to newest build
+- `analytics-20240315-143022` - Timestamp for rollback
+- `analytics-a3f2c1d` - Git commit SHA for tracking
 
 ---
 
@@ -234,46 +359,58 @@ Every deployment creates 3 tags:
 | Item | Value |
 |------|-------|
 | **Cluster** | `my-cluster` |
-| **Service** | `iot-backend-service` |
 | **ECR Repo** | `iot` |
 | **Region** | `ap-southeast-1` |
-| **Port** | `8001` |
-| **Task Family** | `iot-backend` |
-| **Container** | `web` |
+| **Services** | `availability-service`, `analytics-service` |
+| **Ports** | 8001 (availability), 8002 (analytics) |
+| **Task Family** | `availability-service`, `analytics-service` |
+| **Container Name** | `web` |
 
 ---
 
 ## 📞 Need Help?
 
-- Full guide: `backend/README.md`
-- Detailed workflow: `backend/DEPLOYMENT.md`
-- Make commands: `make help` (from backend/)
-- AWS ECR docs: https://docs.aws.amazon.com/ecr/
-- AWS ECS docs: https://docs.aws.amazon.com/ecs/
+- **Full guide**: `backend/README.md`
+- **Detailed workflow**: `backend/DEPLOYMENT.md`
+- **Infrastructure**: `../infra/Makefile`
+- **Quick start**: `../QUICK-START.md`
+- **Make commands**: `make help`
+- **AWS ECS docs**: https://docs.aws.amazon.com/ecs/
+- **AWS ECR docs**: https://docs.aws.amazon.com/ecr/
 
 ---
 
+## 🔥 Pro Tips
+
+1. **Always check status after deploy**
+   ```bash
+   make deploy-availability && make status-availability
+   ```
+
+2. **Monitor logs during deployment**
+   ```bash
+   make logs-availability
+   ```
+
+3. **Test locally before pushing**
+   ```bash
+   make build-availability
+   make run-availability
+   curl http://localhost:8001/health
+   ```
+
+4. **Check health after deployment**
+   ```bash
+   make health-check
+   ```
+
+5. **Use watch for real-time monitoring**
+   ```bash
+   make watch-deployment-availability
+   ```
+
 ---
 
-## 🆕 New Make Commands
-
-```bash
-# Check current service status
-make status
-
-# List recent images in ECR
-make list-images
-
-# Watch deployment in real-time
-make watch-deployment
-
-# Wait for deployment to complete
-make wait-for-stable
-
-# View service logs
-make logs
-```
-
----
-
-**Pro Tip:** Bookmark this file! 🔖
+**Last Updated:** January 2025  
+**Project:** 50046 Cloud Computing and IoT  
+**Pro Tip:** Run `make help` to see all available commands! 🔖
