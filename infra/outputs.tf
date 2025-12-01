@@ -84,3 +84,17 @@ output "availability_service_target_group_arn" {
   description = "ARN of the target group for health check debugging"
   value       = aws_lb_target_group.availability_service_tg.arn
 }
+
+# =========================================================
+# Analytics Service Outputs
+# =========================================================
+
+output "analytics_service_url" {
+  description = "Public URL to access the analytics service API"
+  value       = "http://${aws_lb.iot_alb.dns_name}/analytics"
+}
+
+output "analytics_service_target_group_arn" {
+  description = "ARN of the analytics service target group"
+  value       = aws_lb_target_group.analytics_service_tg.arn
+}

@@ -14,7 +14,7 @@ resource "aws_security_group" "service_sg" {
   }
 
   tags = {
-    Name = "availability-service-security-group"
+    Name = "services-security-group"
   }
 
   lifecycle {
@@ -30,7 +30,29 @@ resource "aws_security_group_rule" "service_from_alb" {
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.alb_sg.id
   security_group_id        = aws_security_group.service_sg.id
-  description              = "Allow traffic from ALB"
+  description              = "Allow traffic from ALB to availability service"
+}
+
+# Separate ingress rule to allow traffic from ALB to analytics service
+resource "aws_security_group_rule" "analytics_from_alb" {
+  type                     = "ingress"
+  from_port                = 8002
+  to_port                  = 8002
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.alb_sg.id
+  security_group_id        = aws_security_group.service_sg.id
+  description              = "Allow traffic from ALB to analytics service"
+}
+
+# Security group rule to allow analytics service to call availability service
+resource "aws_security_group_rule" "analytics_to_availability" {
+  type                     = "ingress"
+  from_port                = 8001
+  to_port                  = 8001
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.service_sg.id
+  source_security_group_id = aws_security_group.service_sg.id
+  description              = "Allow analytics service to call availability service"
 }
 
 # Fargate ECS Service
@@ -56,11 +78,55 @@ resource "aws_ecs_service" "availability_service" {
     container_port   = 8001
   }
 
+  service_registries {
+    registry_arn = aws_service_discovery_service.availability_service.arn
+  }
+
   depends_on = [
     aws_lb_listener.http
   ]
 
   tags = {
     Name = "availability-service"
+  }
+}
+
+# =========================================================
+# Analytics Service
+# =========================================================
+
+# Fargate ECS Service for Analytics
+resource "aws_ecs_service" "analytics_service" {
+  name            = "analytics-service"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.analytics_service.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets = [
+      aws_subnet.private_1.id,
+      aws_subnet.private_2.id
+    ]
+    security_groups  = [aws_security_group.service_sg.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.analytics_service_tg.arn
+    container_name   = "web"
+    container_port   = 8002
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.analytics_service.arn
+  }
+
+  depends_on = [
+    aws_lb_listener.http
+  ]
+
+  tags = {
+    Name = "analytics-service"
   }
 }
