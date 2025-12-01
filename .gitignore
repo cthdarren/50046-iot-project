@@ -1,4 +1,13 @@
 **/node_modules
+
+# =========================
+# IoT Certificates (NEVER commit these!)
+# =========================
+iot-certificates/
+*.pem
+*.pem.crt
+*.pem.key
+
 # =========================
 # Python
 # =========================
@@ -95,4 +104,3 @@ pytest_cache/
 
 # Linux
 *~
-

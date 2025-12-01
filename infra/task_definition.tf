@@ -11,7 +11,7 @@ resource "aws_ecs_task_definition" "app" {
   container_definitions = jsonencode([
     {
       name  = "web"
-      iamge = aws_ecr_repository.app.repository_url
+      image = aws_ecr_repository.app.repository_url
       portMappings = [
         {
           containerPort = 8001
