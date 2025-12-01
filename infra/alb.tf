@@ -138,6 +138,53 @@ resource "aws_lb_listener_rule" "availability_service" {
 #   }
 # }
 
+# Target Group for Analytics Service
+resource "aws_lb_target_group" "analytics_service_tg" {
+  name        = "analytics-service-tg"
+  port        = 8002
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    path                = "/analytics/health"
+    protocol            = "HTTP"
+    matcher             = "200"
+  }
+
+  deregistration_delay = 30
+
+  tags = {
+    Name = "analytics-service-target-group"
+  }
+}
+
+# Listener Rule - forward /analytics/* to analytics service
+resource "aws_lb_listener_rule" "analytics_service" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 200
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.analytics_service_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/analytics", "/analytics/*"]
+    }
+  }
+
+  tags = {
+    Name = "analytics-service-rule"
+  }
+}
+
 # HTTP to HTTPS redirect (optional - uncomment when SSL is configured)
 # resource "aws_lb_listener" "http_redirect" {
 #   load_balancer_arn = aws_lb.iot_alb.arn

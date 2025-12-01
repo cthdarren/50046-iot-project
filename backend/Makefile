@@ -288,6 +288,9 @@ health-check: ## Health check both services via public URLs
 	@ALB_URL=$$(cd $(INFRA_DIR) && terraform output -raw alb_url) && \
 	echo "$(BLUE)Availability Service:$(NC)" && \
 	curl -s -w "\n  Status: %{http_code}\n" $$ALB_URL/availability/health || echo "  $(RED)Failed$(NC)" && \
+	echo "" && \
+	echo "$(BLUE)Analytics Service:$(NC)" && \
+	curl -s -w "\n  Status: %{http_code}\n" $$ALB_URL/analytics/health || echo "  $(RED)Failed$(NC)" && \
 	echo ""
 
 check-aws: ## Verify AWS configuration

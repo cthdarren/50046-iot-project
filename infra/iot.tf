@@ -49,7 +49,7 @@ resource "aws_iot_policy" "sensor_policy" {
           "iot:Publish"
         ]
         Resource = [
-          "arn:aws:iot:*:*:topic/sensors/*"
+          "arn:aws:iot:*:*:topic/cubicle/*"
         ]
       },
       {
@@ -58,7 +58,7 @@ resource "aws_iot_policy" "sensor_policy" {
           "iot:Subscribe"
         ]
         Resource = [
-          "arn:aws:iot:*:*:topicfilter/sensors/*"
+          "arn:aws:iot:*:*:topicfilter/cubicle/*"
         ]
       },
       {
@@ -67,7 +67,7 @@ resource "aws_iot_policy" "sensor_policy" {
           "iot:Receive"
         ]
         Resource = [
-          "arn:aws:iot:*:*:topic/sensors/*"
+          "arn:aws:iot:*:*:topic/cubicle/*"
         ]
       }
     ]
