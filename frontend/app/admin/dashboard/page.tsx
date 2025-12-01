@@ -7,7 +7,7 @@ import {
   getCubiclesMallsMallIdToiletsToiletIdCubiclesGet,
   getToiletsMallsMallIdToiletsGet,
   ToiletDto
-} from "../services/availability";
+} from "@/app/services/availability";
 
 import * as React from "react"
 import {
@@ -43,7 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { MallToiletOccupancy, Toilet } from "../models/models";
+import { MallToiletOccupancy, Toilet } from "../../models/models";
 
 type ParsedToilet = {
   name: string;
@@ -223,7 +223,7 @@ export default function Dashboard() {
         // 4. Set state
         // setData(parseMallToiletOccupancy({ mall_id: mallId, toilets: nestedToilets }))
       } catch (err) {
-        console.error("Failed to fetch mall occupancy", err);
+        console.error("Failed to fetch mall occuancy", err);
       } finally {
         setLoading(false);
       }
