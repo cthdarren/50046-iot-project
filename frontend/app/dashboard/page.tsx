@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useId } from "@/context/IdContext";
 import {
+    CubicleDto,
   getCubiclesMallsMallIdToiletsToiletIdCubiclesGet,
-  getToiletsMallsMallIdToiletsGet
+  getToiletsMallsMallIdToiletsGet,
+  ToiletDto
 } from "../services/availability";
 
 import * as React from "react"
@@ -41,111 +43,104 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { MallToiletOccupancy, Toilet } from "../models/models";
 
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-]
+type ParsedToilet = {
+  name: string;
+  level: string;
+  occupancy: string;
+};
 
-export type Payment = {
-  id: string
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
+function parseMallToiletOccupancy(
+  mall: MallToiletOccupancy
+): ParsedToilet[] {
+  return mall.toilets.map((t) => ({
+    name: t.description,
+    level: t.level,
+    occupancy: `${t.occupied_count}/${t.total_cubicles}`,
+  }));
 }
 
-export const columns: ColumnDef<Payment>[] = [
+const toiletdata: MallToiletOccupancy = {
+    mall_id: 1,
+    toilets: [
+      {
+        id: 101,
+        level: "B1",
+        gender: "Male",
+        description: "Near Food Court",
+        mall_id: 1,
+        cubicles: [
+          { id: 1, toilet_id: 101, occupied: true, toilet_roll_percentage: 45 },
+          { id: 2, toilet_id: 101, occupied: false, toilet_roll_percentage: 80 },
+          { id: 3, toilet_id: 101, occupied: true, toilet_roll_percentage: 60 },
+        ],
+        total_cubicles: 3,
+        occupied_count: 2,
+        occupancy_percentage: 66.7,
+      },
+      {
+        id: 102,
+        level: "L1",
+        gender: "Female",
+        description: "Next to Zara",
+        mall_id: 1,
+        cubicles: [
+          { id: 4, toilet_id: 102, occupied: false, toilet_roll_percentage: 90 },
+          { id: 5, toilet_id: 102, occupied: false, toilet_roll_percentage: 70 },
+          { id: 6, toilet_id: 102, occupied: true, toilet_roll_percentage: 50 },
+          { id: 7, toilet_id: 102, occupied: false, toilet_roll_percentage: 30 },
+        ],
+        total_cubicles: 4,
+        occupied_count: 1,
+        occupancy_percentage: 25,
+      },
+    ],
+  }
+
+export const columns: ColumnDef<ParsedToilet>[] = [
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "name",
+    header: "Name",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
+      <div className="capitalize">{row.getValue("name")}</div>
     ),
   },
   {
-    accessorKey: "email",
+    accessorKey: "level",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
+          className="p-0!"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Email
+            Level
           <ArrowUpDown />
         </Button>
       )
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    cell: ({ row }) => <div className="uppercase">{row.getValue("level")}</div>,
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
+    accessorKey: "occupancy",
+    header: () => <div className="text-right">Occupancy</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-
-      return <div className="text-right font-medium">{formatted}</div>
+      return <div className="text-right font-medium">{row.getValue("occupancy")}</div>
     },
   },
   {
+    accessorKey: "actions",
+    header: () => <div className="text-right">Actions</div>,
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original
-
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
+        <div className="flex justify-end"> 
+            <Button variant="default">
+              <span> View Historical Data </span>
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        </div>
       )
     },
   },
@@ -154,8 +149,7 @@ export const columns: ColumnDef<Payment>[] = [
 export default function Dashboard() {
   const { id } = useId();
 
-  const [toilets, setToilets] = useState<any[]>([]);
-  const [cubicles, setCubicles] = useState<any[]>([]);
+  const [data, setData] = useState<ParsedToilet[]>([]);
   const [loading, setLoading] = useState(true);
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -187,43 +181,55 @@ export default function Dashboard() {
   useEffect(() => {
     if (!id) return;
 
-    async function loadData() {
-      if (!id) return;
+    async function fetchOccupancy(mallId: number) {
+      setData(parseMallToiletOccupancy(toiletdata))
+      setLoading(false);
+      console.log(data)
+      return;
       try {
-        // 1. Fetch all toilets for this mall
-        const toiletRes = await getToiletsMallsMallIdToiletsGet({
-          path: { mall_id: id }
+        // 1. Fetch all toilets
+        const toiletsRes = await getToiletsMallsMallIdToiletsGet({
+          path: { mall_id: mallId },
         });
 
-        const toiletList = toiletRes.data?.toilets ?? [];
-        setToilets(toiletList);
+        const toilets = toiletsRes.data?.toilets ?? [];
 
         // 2. Fetch cubicles for each toilet in parallel
-        const cubiclePromises = toiletList.map((toilet: any) =>
-          getCubiclesMallsMallIdToiletsToiletIdCubiclesGet({
-            path: {
-              mall_id: id,
-              toilet_id: toilet.id
-            }
-          })
+        const cubicleResponses = await Promise.all(
+          toilets.map((toilet) =>
+            getCubiclesMallsMallIdToiletsToiletIdCubiclesGet({
+              path: { mall_id: mallId, toilet_id: toilet.id },
+            })
+          )
         );
 
-        const cubicleResults = await Promise.all(cubiclePromises);
+        // 3. Build nested structure
+        const nestedToilets: Toilet[] = toilets.map((toilet, index) => {
+          const cubicles: CubicleDto[] =
+            cubicleResponses[index].data?.cubicles ?? [];
 
-        // 3. Flatten all cubicles from all toilets into one list
-        const allCubicles = cubicleResults.flatMap(
-          (res) => res.data?.cubicles ?? []
-        );
+          const occupiedCount = cubicles.filter((c) => c.occupied).length;
+          const total = cubicles.length;
 
-        setCubicles(allCubicles);
-      } catch (error) {
-        console.error("Failed to load dashboard:", error);
+          return {
+            ...toilet,
+            cubicles,
+            total_cubicles: total,
+            occupied_count: occupiedCount,
+            occupancy_percentage: total ? occupiedCount / total : 0,
+          };
+        });
+
+        // 4. Set state
+        // setData(parseMallToiletOccupancy({ mall_id: mallId, toilets: nestedToilets }))
+      } catch (err) {
+        console.error("Failed to fetch mall occupancy", err);
       } finally {
         setLoading(false);
       }
     }
 
-    loadData();
+    fetchOccupancy(id);
   }, [id]);
 
   if (!id) return <div>No ID found. Please sign in again.</div>;
@@ -231,13 +237,13 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-    <div className="w-full">
+    <div className="w-10/12">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+          placeholder="Filter Names..."
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -319,10 +325,6 @@ export default function Dashboard() {
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
         <div className="space-x-2">
           <Button
             variant="outline"
