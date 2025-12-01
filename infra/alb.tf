@@ -1,5 +1,5 @@
 # =========================================================
-# Application Load Balancer for Backend Service
+# Shared Application Load Balancer for IoT Services
 # =========================================================
 
 # Security Group for ALB - allows HTTP/HTTPS from internet
@@ -41,8 +41,8 @@ resource "aws_security_group" "alb_sg" {
 }
 
 # Application Load Balancer
-resource "aws_lb" "backend_alb" {
-  name               = "iot-backend-alb"
+resource "aws_lb" "iot_alb" {
+  name               = "iot-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
@@ -55,13 +55,14 @@ resource "aws_lb" "backend_alb" {
   enable_http2               = true
 
   tags = {
-    Name = "iot-backend-alb"
+    Name        = "iot-alb"
+    Description = "Shared ALB for all IoT services"
   }
 }
 
 # Target Group for ECS Service
-resource "aws_lb_target_group" "backend_tg" {
-  name        = "iot-backend-tg"
+resource "aws_lb_target_group" "availability_service_tg" {
+  name        = "availability-service-tg"
   port        = 8001
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
@@ -73,7 +74,7 @@ resource "aws_lb_target_group" "backend_tg" {
     unhealthy_threshold = 3
     timeout             = 5
     interval            = 30
-    path                = "/health"
+    path                = "/availability/health"
     protocol            = "HTTP"
     matcher             = "200"
   }
@@ -81,25 +82,51 @@ resource "aws_lb_target_group" "backend_tg" {
   deregistration_delay = 30
 
   tags = {
-    Name = "iot-backend-target-group"
+    Name = "availability-service-target-group"
   }
 }
 
-# HTTP Listener - forwards all traffic to target group
-resource "aws_lb_listener" "backend_http" {
-  load_balancer_arn = aws_lb.backend_alb.arn
+# HTTP Listener - default action returns fixed response (no frontend yet)
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.iot_alb.arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "IoT Platform - No route configured for this path"
+      status_code  = "404"
+    }
+  }
+}
+
+# Listener Rule - forward /availability/* to availability service
+resource "aws_lb_listener_rule" "availability_service" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 100
+
+  action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.backend_tg.arn
+    target_group_arn = aws_lb_target_group.availability_service_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/availability", "/availability/*"]
+    }
+  }
+
+  tags = {
+    Name = "availability-service-rule"
   }
 }
 
 # HTTPS Listener (optional - uncomment when you have an SSL certificate)
-# resource "aws_lb_listener" "backend_https" {
-#   load_balancer_arn = aws_lb.backend_alb.arn
+# resource "aws_lb_listener" "https" {
+#   load_balancer_arn = aws_lb.iot_alb.arn
 #   port              = 443
 #   protocol          = "HTTPS"
 #   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -107,13 +134,13 @@ resource "aws_lb_listener" "backend_http" {
 #
 #   default_action {
 #     type             = "forward"
-#     target_group_arn = aws_lb_target_group.backend_tg.arn
+#     target_group_arn = aws_lb_target_group.availability_service_tg.arn
 #   }
 # }
 
 # HTTP to HTTPS redirect (optional - uncomment when SSL is configured)
-# resource "aws_lb_listener" "backend_http_redirect" {
-#   load_balancer_arn = aws_lb.backend_alb.arn
+# resource "aws_lb_listener" "http_redirect" {
+#   load_balancer_arn = aws_lb.iot_alb.arn
 #   port              = 80
 #   protocol          = "HTTP"
 #

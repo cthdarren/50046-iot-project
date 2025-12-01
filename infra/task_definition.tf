@@ -1,5 +1,5 @@
-resource "aws_ecs_task_definition" "app" {
-  family                   = "iot-backend"
+resource "aws_ecs_task_definition" "availability_service" {
+  family                   = "availability-service"
   network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
@@ -11,7 +11,7 @@ resource "aws_ecs_task_definition" "app" {
   container_definitions = jsonencode([
     {
       name  = "web"
-      image = "${aws_ecr_repository.app.repository_url}:latest"
+      image = "${aws_ecr_repository.availability_service.repository_url}:latest"
 
       portMappings = [
         {

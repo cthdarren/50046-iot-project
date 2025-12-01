@@ -14,7 +14,7 @@ resource "aws_security_group" "service_sg" {
   }
 
   tags = {
-    Name = "ecs-service-security-group"
+    Name = "availability-service-security-group"
   }
 
   lifecycle {
@@ -34,10 +34,10 @@ resource "aws_security_group_rule" "service_from_alb" {
 }
 
 # Fargate ECS Service
-resource "aws_ecs_service" "app" {
-  name            = "iot-backend-service"
+resource "aws_ecs_service" "availability_service" {
+  name            = "availability-service"
   cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.app.arn
+  task_definition = aws_ecs_task_definition.availability_service.arn
   launch_type     = "FARGATE"
   desired_count   = 1
 
@@ -51,16 +51,16 @@ resource "aws_ecs_service" "app" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.backend_tg.arn
+    target_group_arn = aws_lb_target_group.availability_service_tg.arn
     container_name   = "web"
     container_port   = 8001
   }
 
   depends_on = [
-    aws_lb_listener.backend_http
+    aws_lb_listener.http
   ]
 
   tags = {
-    Name = "iot-backend-service"
+    Name = "availability-service"
   }
 }
