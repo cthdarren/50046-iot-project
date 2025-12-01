@@ -1,23 +1,39 @@
-# Fargate ECS Service
+# Security Group for ECS Service
 resource "aws_security_group" "service_sg" {
-  name = "service-sg"
-  vpc_id = aws_vpc.main.id
+  name        = "service-sg"
+  description = "Managed by Terraform"
+  vpc_id      = aws_vpc.main.id
 
-  ingress {
-    from_port = 8001
-    to_port = 8001
-    protocol = "tcp"
-    security_groups = []
+  # Allow all outbound traffic
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+
   }
 
-  egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+  tags = {
+    Name = "ecs-service-security-group"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
+# Separate ingress rule to allow traffic from ALB
+resource "aws_security_group_rule" "service_from_alb" {
+  type                     = "ingress"
+  from_port                = 8001
+  to_port                  = 8001
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.alb_sg.id
+  security_group_id        = aws_security_group.service_sg.id
+  description              = "Allow traffic from ALB"
+}
+
+# Fargate ECS Service
 resource "aws_ecs_service" "app" {
   name            = "iot-backend-service"
   cluster         = aws_ecs_cluster.main.id
@@ -30,7 +46,21 @@ resource "aws_ecs_service" "app" {
       aws_subnet.private_1.id,
       aws_subnet.private_2.id
     ]
-    security_groups = [aws_security_group.service_sg.id]
+    security_groups  = [aws_security_group.service_sg.id]
     assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.backend_tg.arn
+    container_name   = "web"
+    container_port   = 8001
+  }
+
+  depends_on = [
+    aws_lb_listener.backend_http
+  ]
+
+  tags = {
+    Name = "iot-backend-service"
   }
 }

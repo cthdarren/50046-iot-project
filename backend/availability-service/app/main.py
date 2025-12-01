@@ -1,4 +1,8 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+
+from api.routers.cubicles_router import router as cubicles_router
 from api.routers.malls_router import router as malls_router
 from api.routers.toilets_router import router as toilets_router
 from api.routers.cubicles_router import router as cubicles_router
@@ -29,3 +33,8 @@ app.add_exception_handler(ApiException, exception_handler)
 @app.get("/")
 def root() -> dict[str, str]:
     return {"message": "Availability service is running."}
+
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "healthy"}

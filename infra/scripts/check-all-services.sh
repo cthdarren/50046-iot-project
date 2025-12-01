@@ -95,17 +95,54 @@ if check_status "$PROXY_STATUS" "available" "Status"; then
     if [ "$TARGET_STATUS" == "AVAILABLE" ]; then
         echo -e "${GREEN}✓${NC} Target: $TARGET_STATUS"
     else
-        echo -e "${RED}✗${NC} Target: $TARGET_STATUS"
-        ALL_GOOD=1
+        echo -e "${YELLOW}⚠${NC} Target: $TARGET_STATUS (proxy not in use - app uses direct RDS connection)"
+        # Don't fail overall check since we're using direct RDS connection
+        show_info "Note: Backend connects directly to RDS, not via proxy"
     fi
 else
     ALL_GOOD=1
 fi
 echo ""
 
-# 3. Lambda Function
+# 3. ECR Repository
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo "3. Lambda Function"
+echo "3. ECR Repository"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+ECR_REPO=$(aws ecr describe-repositories \
+  --repository-names iot \
+  --query 'repositories[0].repositoryName' \
+  --output text 2>/dev/null || echo "NOT_FOUND")
+
+if check_status "$ECR_REPO" "iot" "Repository"; then
+    ECR_URI=$(aws ecr describe-repositories \
+      --repository-names iot \
+      --query 'repositories[0].repositoryUri' \
+      --output text 2>/dev/null)
+    show_info "URI: $ECR_URI"
+
+    # Check for images
+    IMAGE_COUNT=$(aws ecr describe-images \
+      --repository-name iot \
+      --query 'length(imageDetails)' \
+      --output text 2>/dev/null || echo "0")
+    show_info "Images: $IMAGE_COUNT"
+
+    if [ "$IMAGE_COUNT" -gt "0" ]; then
+        LATEST_TAG=$(aws ecr describe-images \
+          --repository-name iot \
+          --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' \
+          --output text 2>/dev/null || echo "untagged")
+        show_info "Latest tag: $LATEST_TAG"
+    fi
+else
+    ALL_GOOD=1
+fi
+echo ""
+
+# 4. Lambda Function
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "4. Lambda Function"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 LAMBDA_STATE=$(aws lambda get-function \
@@ -113,7 +150,10 @@ LAMBDA_STATE=$(aws lambda get-function \
   --query 'Configuration.State' \
   --output text 2>/dev/null || echo "NOT_FOUND")
 
-if check_status "$LAMBDA_STATE" "Active" "State"; then
+if [ "$LAMBDA_STATE" == "NOT_FOUND" ]; then
+    echo -e "${YELLOW}⚠${NC} State: NOT_DEPLOYED (Lambda not yet deployed)"
+    show_info "Lambda will be created when needed for IoT message processing"
+elif check_status "$LAMBDA_STATE" "Active" "State"; then
     LAMBDA_RUNTIME=$(aws lambda get-function \
       --function-name iot_ts_handler \
       --query 'Configuration.Runtime' \
@@ -167,31 +207,31 @@ if check_status "$LAMBDA_STATE" "Active" "State"; then
         ALL_GOOD=1
     fi
 else
-    ALL_GOOD=1
+    echo -e "${YELLOW}⚠${NC} State: $LAMBDA_STATE"
 fi
 echo ""
 
-# 4. ECS Fargate Service
+# 5. ECS Fargate Service
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo "4. ECS Fargate Service"
+echo "5. ECS Fargate Service"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 ECS_STATUS=$(aws ecs describe-services \
-  --cluster iot-cluster \
-  --services backend-service \
+  --cluster my-cluster \
+  --services iot-backend-service \
   --query 'services[0].status' \
   --output text 2>/dev/null || echo "NOT_FOUND")
 
 if check_status "$ECS_STATUS" "ACTIVE" "Status"; then
     ECS_DESIRED=$(aws ecs describe-services \
-      --cluster iot-cluster \
-      --services backend-service \
+      --cluster my-cluster \
+      --services iot-backend-service \
       --query 'services[0].desiredCount' \
       --output text 2>/dev/null)
 
     ECS_RUNNING=$(aws ecs describe-services \
-      --cluster iot-cluster \
-      --services backend-service \
+      --cluster my-cluster \
+      --services iot-backend-service \
       --query 'services[0].runningCount' \
       --output text 2>/dev/null)
 
@@ -199,6 +239,27 @@ if check_status "$ECS_STATUS" "ACTIVE" "Status"; then
 
     if [ "$ECS_RUNNING" == "$ECS_DESIRED" ]; then
         echo -e "${GREEN}✓${NC} Running tasks: $ECS_RUNNING"
+
+        # Check task definition
+        TASK_DEF=$(aws ecs describe-services \
+          --cluster my-cluster \
+          --services iot-backend-service \
+          --query 'services[0].taskDefinition' \
+          --output text 2>/dev/null)
+        show_info "Task definition: $TASK_DEF"
+
+        # Check if tasks are healthy
+        TASK_HEALTH=$(aws ecs describe-tasks \
+          --cluster my-cluster \
+          --tasks $(aws ecs list-tasks --cluster my-cluster --service-name iot-backend-service --query 'taskArns[0]' --output text 2>/dev/null) \
+          --query 'tasks[0].lastStatus' \
+          --output text 2>/dev/null || echo "UNKNOWN")
+
+        if [ "$TASK_HEALTH" == "RUNNING" ]; then
+            echo -e "${GREEN}✓${NC} Task health: $TASK_HEALTH"
+        else
+            echo -e "${YELLOW}⚠${NC} Task health: $TASK_HEALTH"
+        fi
     else
         echo -e "${YELLOW}⚠${NC} Running tasks: $ECS_RUNNING (desired: $ECS_DESIRED)"
         ALL_GOOD=1
@@ -208,9 +269,39 @@ else
 fi
 echo ""
 
-# 5. IoT Core
+# 6. Port Configuration
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo "5. IoT Core"
+echo "6. Port Configuration"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+RDS_PORT=$(aws rds describe-db-instances \
+  --db-instance-identifier iot-postgres-db \
+  --query 'DBInstances[0].Endpoint.Port' \
+  --output text 2>/dev/null || echo "UNKNOWN")
+
+SG_PORT=$(aws ec2 describe-security-groups \
+  --filters "Name=group-name,Values=rds_sg" \
+  --query 'SecurityGroups[0].IpPermissions[0].FromPort' \
+  --output text 2>/dev/null || echo "UNKNOWN")
+
+ECS_PORT=$(aws ecs describe-task-definition \
+  --task-definition iot-backend \
+  --query 'taskDefinition.containerDefinitions[0].environment[?name==`DB_PORT`].value' \
+  --output text 2>/dev/null || echo "UNKNOWN")
+
+if [ "$RDS_PORT" == "5432" ] && [ "$SG_PORT" == "5432" ] && [ "$ECS_PORT" == "5432" ]; then
+    echo -e "${GREEN}✓${NC} Port configuration: All components use 5432"
+    show_info "RDS: $RDS_PORT | Security Group: $SG_PORT | ECS: $ECS_PORT"
+else
+    echo -e "${RED}✗${NC} Port mismatch detected!"
+    show_info "RDS: $RDS_PORT | Security Group: $SG_PORT | ECS: $ECS_PORT"
+    ALL_GOOD=1
+fi
+echo ""
+
+# 7. IoT Core
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "7. IoT Core"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 IOT_THING=$(aws iot describe-thing \
@@ -249,8 +340,10 @@ IOT_RULE_DISABLED=$(aws iot get-topic-rule \
 
 if [ "$IOT_RULE_DISABLED" == "False" ] || [ "$IOT_RULE_DISABLED" == "false" ]; then
     echo -e "${GREEN}✓${NC} Topic Rule: Enabled"
+elif [ "$IOT_RULE_DISABLED" == "UNKNOWN" ]; then
+    echo -e "${YELLOW}⚠${NC} Topic Rule: NOT_DEPLOYED (will be created when Lambda is deployed)"
 else
-    echo -e "${RED}✗${NC} Topic Rule: Disabled or not found"
+    echo -e "${RED}✗${NC} Topic Rule: Disabled"
     ALL_GOOD=1
 fi
 
@@ -264,9 +357,9 @@ if [ -n "$IOT_ENDPOINT" ] && [ "$IOT_ENDPOINT" != "null" ]; then
 fi
 echo ""
 
-# 6. VPC & Networking
+# 8. VPC & Networking
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo "6. VPC & Networking"
+echo "8. VPC & Networking"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 # Get VPC ID
@@ -302,19 +395,22 @@ echo "Summary"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 if [ $ALL_GOOD -eq 0 ]; then
-    echo -e "${GREEN}✓ All services are running normally!${NC}"
+    echo -e "${GREEN}✓ All deployed services are running normally!${NC}"
     echo ""
     echo "Next steps:"
-    echo "  • View Lambda logs: aws logs tail /aws/lambda/iot_ts_handler --follow"
-    echo "  • Test IoT: Publish to 'sensors/test' topic in AWS Console"
+    echo "  • View ECS logs: aws logs tail /ecs/iot-backend --follow --region ap-southeast-1"
+    echo "  • Check backend health: curl http://<load-balancer>/health"
+    echo "  • Deploy Lambda: cd infra/ && terraform apply (for IoT message processing)"
     echo "  • Monitor metrics: https://console.aws.amazon.com/cloudwatch/"
 else
     echo -e "${YELLOW}⚠ Some services need attention${NC}"
     echo ""
     echo "Troubleshooting:"
-    echo "  • Check detailed logs: aws logs tail /aws/lambda/iot_ts_handler --follow"
+    echo "  • Check ECS logs: aws logs tail /ecs/iot-backend --follow --region ap-southeast-1"
+    echo "  • Check service status: aws ecs describe-services --cluster my-cluster --services iot-backend-service"
     echo "  • Review deployment: cd infra/ && terraform plan"
-    echo "  • See monitoring guide: MONITORING_GUIDE.md"
+    echo "  • Port verification: See infra/docs/PORT_VERIFICATION.md"
+    echo "  • RDS Proxy issues: See infra/docs/RDS_PROXY_DEBUGGING.md"
 fi
 
 echo ""

@@ -65,3 +65,26 @@ resource "aws_iam_role_policy_attachment" "ecs_task_exec_policy" {
   role       = aws_iam_role.ecs_task_exec.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
+
+# Allow ECS to read from Secrets Manager
+resource "aws_iam_policy" "ecs_secretsmanager" {
+  name        = "ecs_secretsmanager_policy"
+  description = "Allow ECS tasks to get secret value from Secrets Manager for RDS credentials"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ],
+        Resource = data.aws_secretsmanager_secret.rds_credentials.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_secretsmanager" {
+  role       = aws_iam_role.ecs_task_exec.name
+  policy_arn = aws_iam_policy.ecs_secretsmanager.arn
+}

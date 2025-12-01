@@ -87,6 +87,15 @@ resource "aws_iam_role_policy" "rds_proxy_policy" {
             "kms:ViaService" = "secretsmanager.${data.aws_region.current.id}.amazonaws.com"
           }
         }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:${data.aws_region.current.id}:*:log-group:/aws/rds/proxy/*"
       }
     ]
   })
@@ -94,13 +103,20 @@ resource "aws_iam_role_policy" "rds_proxy_policy" {
 
 data "aws_region" "current" {}
 
+/* CloudWatch Log Group for RDS Proxy */
+resource "aws_cloudwatch_log_group" "rds_proxy_logs" {
+  name              = "/aws/rds/proxy/iot-rds-proxy"
+  retention_in_days = 7
+}
+
 /* RDS Proxy */
 resource "aws_db_proxy" "rds_proxy" {
   name                = "iot-rds-proxy"
   engine_family       = "POSTGRESQL"
-  require_tls         = true
+  require_tls         = false
   idle_client_timeout = 1800
   role_arn            = aws_iam_role.rds_proxy_role.arn
+  debug_logging       = true
 
   auth {
     auth_scheme = "SECRETS"
@@ -110,6 +126,8 @@ resource "aws_db_proxy" "rds_proxy" {
 
   vpc_subnet_ids         = [aws_subnet.private_1.id, aws_subnet.private_2.id]
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
+
+  depends_on = [aws_cloudwatch_log_group.rds_proxy_logs]
 }
 
 /* Wait for RDS instance to be fully available */
