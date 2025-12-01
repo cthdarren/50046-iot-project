@@ -1,6 +1,12 @@
 import { defineConfig } from '@hey-api/openapi-ts';
 
-export default defineConfig({
-  input: 'http://localhost:8000/openapi.json',
-  output: 'app/services',
-});
+export default [
+    {
+      input: '/home/lingyuan/Downloads/openapi_analytics_service.json',
+      output: 'app/services/analytics',
+    },
+    {
+      input: '/home/lingyuan/Downloads/openapi_availability_service.json',
+      output: 'app/services/availability',
+    },
+];
