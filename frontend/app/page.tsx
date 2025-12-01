@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useId } from "@/context/IdContext";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const { id, setId } = useId();
@@ -30,26 +32,28 @@ export default function Home() {
   };
 
   return (
-    <main className="flex p-6">
-      <h1 className="text-xl mb-4">Enter Your ID</h1>
+    <div className="flex w-full h-full justify-center items-center">
+    <div className="flex flex-col -mt-40">
+      <h1 className="text-xl mb-4">Enter Mall ID</h1>
 
-      <form onSubmit={handleSubmit}>
-        <input
+      <form className="flex" onSubmit={handleSubmit}>
+        <Input
           type="number"
           className="border p-2 rounded"
-          placeholder="Enter ID"
+          placeholder="Enter Mall ID"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
         />
 
-        <button
+        <Button
           type="submit"
           className="ml-2 px-4 py-2 bg-blue-600 text-white rounded"
         >
           Continue
-        </button>
+        </Button>
       </form>
-    </main>
+      </div>
+    </div>
   );
 }
 
