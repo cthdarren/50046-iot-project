@@ -31,15 +31,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <IdProvider>
         <SidebarProvider>
           <AppSidebar />
           <main>
             <SidebarTrigger />
-            <IdProvider>
                 {children}
-            </IdProvider>
           </main>
         </SidebarProvider>
+        </IdProvider>
       </body>
     </html>
   );

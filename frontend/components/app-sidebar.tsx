@@ -1,8 +1,12 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+"use client";
+import { Calendar, ChevronUp, Home, Inbox, Search, Settings, User2 } from "lucide-react"
+import { useId } from "@/context/IdContext";
+import { useRouter } from "next/navigation";
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -10,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 // Menu items.
 const items = [
@@ -30,7 +35,18 @@ const items = [
   },
 ]
 
+
+export function signOut() {
+  const router = useRouter();
+
+  return () => {
+    localStorage.removeItem("id");
+    location.href = "/"
+  };
+}
+
 export function AppSidebar() {
+  const { id, setId } = useId();
   return (
     <Sidebar>
       <SidebarContent>
@@ -52,6 +68,28 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+    <SidebarFooter>
+            <SidebarMenu>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton>
+                    <User2 /> Mall ID: {id}
+                    <ChevronUp className="ml-auto" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  side="top"
+                  style={{width: "var(--radix-popper-anchor-width)"}}
+                >
+                  <DropdownMenuItem onClick={signOut()}>
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+    </SidebarFooter>
     </Sidebar>
   )
 }
