@@ -1,7 +1,7 @@
 from typing import Sequence
 from schemas.request_dto.mall_request_dto import MallRequestDto
 from fastapi import Depends
-from core.exceptions import NotFoundException, DuplicateException
+from shared.core.exceptions import NotFoundException, DuplicateException
 from db.database import get_db
 from ..repo.malls_repo import MallsRepo
 from db.models import Mall

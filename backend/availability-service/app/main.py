@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from api.routers.malls_router import router as malls_router
 from api.routers.toilets_router import router as toilets_router
 from api.routers.cubicles_router import router as cubicles_router
+from api.routers.events_router import router as events_router
 from contextlib import asynccontextmanager
-from core.exceptions import ApiException, exception_handler
+from shared.core.exceptions import ApiException, exception_handler
 from db.database import engine, wait_for_db
 from db.models import Base
 
@@ -21,6 +22,7 @@ app = FastAPI(title="Availability Service", lifespan=lifespan)
 app.include_router(malls_router)
 app.include_router(toilets_router)
 app.include_router(cubicles_router)
+app.include_router(events_router)
 app.add_exception_handler(ApiException, exception_handler)
 
 

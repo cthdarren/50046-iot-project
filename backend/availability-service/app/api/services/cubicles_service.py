@@ -4,9 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..repo.cubicles_repo import CubiclesRepo
 from ..services.toilets_service import ToiletsService
 from schemas.request_dto.cubicle_request_dto import CubicleRequestDto
-from core.exceptions import NotFoundException
+from shared.core.exceptions import NotFoundException
 from typing import Sequence
-from db.models import Cubicle, CubicleState, CubicleEvent
+from db.models import Cubicle
 
 
 class CubiclesService:
@@ -80,25 +80,3 @@ class CubiclesService:
         if not cubicle:
             raise NotFoundException(detail="Cubicle not found.")
         return await self.cubicles_repo.delete_cubicle(cubicle_id)
-
-    async def get_cubicle_state(
-        self, mall_id: int, toilet_id: int, cubicle_id: int
-    ) -> CubicleState:
-        cubicle = await self.get_cubicle(mall_id, toilet_id, cubicle_id)
-        if not cubicle:
-            raise NotFoundException(detail="Cubicle not found.")
-        cubicle_state = await self.cubicles_repo.get_cubicle_state(cubicle_id)
-        if not cubicle_state:
-            raise NotFoundException(detail="Cubicle state not found.")
-        return cubicle_state
-
-    async def get_latest_cubicle_event(
-        self, mall_id: int, toilet_id: int, cubicle_id: int
-    ) -> CubicleEvent:
-        cubicle = await self.get_cubicle(mall_id, toilet_id, cubicle_id)
-        if not cubicle:
-            raise NotFoundException(detail="Cubicle not found.")
-        cubicle_event = await self.cubicles_repo.get_latest_cubicle_event(cubicle_id)
-        if not cubicle_event:
-            raise NotFoundException(detail="Cubicle event not found.")
-        return cubicle_event

@@ -1,7 +1,7 @@
 from typing import Sequence, Optional
 from api.repo.toilets_repo import ToiletsRepo
 from sqlalchemy.ext.asyncio import AsyncSession
-from core.exceptions import InternalServerErrorException, NotFoundException
+from shared.core.exceptions import InternalServerErrorException, NotFoundException
 from db.models import Toilet
 from schemas.request_dto.toilet_request_dto import ToiletRequestDto
 from db.database import get_db
