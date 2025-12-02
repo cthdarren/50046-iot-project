@@ -268,7 +268,7 @@ resource "aws_lb_target_group" "frontend_service_tg" {
     unhealthy_threshold = 3
     timeout             = 5
     interval            = 30
-    path                = "/"
+    path                = "/health"
     protocol            = "HTTP"
     matcher             = "200"
   }
