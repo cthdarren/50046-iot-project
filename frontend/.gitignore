@@ -36,15 +36,6 @@ logs/
 *.seed
 
 # ============================
-# Dependency Managers
-# ============================
-package-lock.json
-pnpm-lock.yaml
-# ^ optional — keep if you want exact deterministic builds
-# yarn.lock
-# ^ choose one depending on your team
-
-# ============================
 # Build / Output
 # ============================
 dist/

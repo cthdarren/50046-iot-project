@@ -12,7 +12,7 @@ export default function Dashboard() {
 
   if (!id) return <div>No ID found. Please sign in again.</div>;
   return (
-    <div className="flex min-h-screen w-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
     <div className="h-screen w-10/12 gap-10 flex flex-col">
     <MallAnalyticsChart
       mallId={id}
