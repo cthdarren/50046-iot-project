@@ -1,5 +1,5 @@
 import http from "http";
-import { cubicleEventHandler, cubicleStateHandler } from "./index";
+import { handler } from "./index";
 
 const port = process.env.PORT ? Number(process.env.PORT) : 8080;
 
@@ -15,13 +15,9 @@ const server = http.createServer(async (req, res) => {
         try {
           event = body ? JSON.parse(body) : {};
         } catch (e) {}
-        const result = await cubicleEventHandler(event);
-        const result2 = await cubicleStateHandler(event);
+        const result = await handler(event);
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({
-          event_result: result,
-          state_result: result2
-        }));
+        res.end(JSON.stringify(result));
       });
     } catch (err: any) {
       res.writeHead(500, { "Content-Type": "application/json" });
