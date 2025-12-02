@@ -23,22 +23,7 @@ import React from "react";
 import { useId } from "@/context/IdContext";
 import { getToiletsMallsMallIdToiletsGet, getCubiclesMallsMallIdToiletsToiletIdCubiclesGet, CubicleDto } from "@/app/services/availability";
 import { usePolling } from "@/hooks/use-polling";
-
-function viewHistoricalData(lol: string){
-    console.log(lol)
-}
-
-
-function parseMallToiletOccupancy(
-  mall: MallToiletOccupancy
-): ParsedToilet[] {
-  return mall.toilets.map((t) => ({
-    id: t.id,
-    name: t.description,
-    level: t.level,
-    occupancy: `${t.occupied_count}/${t.total_cubicles}`,
-  }));
-}
+import { useRouter } from "next/navigation";
 
 // const toiletdata: MallToiletOccupancy = {
 //     mall_id: 1,
@@ -77,7 +62,21 @@ function parseMallToiletOccupancy(
 //     ],
 //   }
 
-export const columns: ColumnDef<ParsedToilet>[] = [
+
+export default function RealTimeOccupancyTable() {
+  const { id } = useId();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<ParsedToilet[]>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  )
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = React.useState({})
+  const router = useRouter();
+
+ const columns: ColumnDef<ParsedToilet>[] = [
   {
     accessorKey: "name",
     header: "Name",
@@ -125,18 +124,6 @@ export const columns: ColumnDef<ParsedToilet>[] = [
   },
 ]
 
-export default function RealTimeOccupancyTable() {
-  const { id } = useId();
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<ParsedToilet[]>([]);
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
-
   const table = useReactTable({
     data,
     columns,
@@ -155,6 +142,24 @@ export default function RealTimeOccupancyTable() {
       rowSelection,
     },
   })
+
+function viewHistoricalData(lol: string){
+    console.log(lol)
+    router.push(`dashboard/toilet/${lol}`)
+}
+
+
+function parseMallToiletOccupancy(
+  mall: MallToiletOccupancy
+): ParsedToilet[] {
+  return mall.toilets.map((t) => ({
+    id: t.id,
+    name: t.description,
+    level: t.level,
+    occupancy: `${t.occupied_count}/${t.total_cubicles}`,
+  }));
+}
+
 
     async function fetchOccupancy() {
       // setData(parseMallToiletOccupancy(toiletdata))
