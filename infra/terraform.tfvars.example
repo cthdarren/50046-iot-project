@@ -1,0 +1,19 @@
+# =========================================================
+# Terraform Variables Configuration Example
+# =========================================================
+# Copy this file to terraform.tfvars and fill in your values
+# DO NOT commit terraform.tfvars to git (it's in .gitignore)
+
+# Your custom domain name for the IoT platform
+# Example: "api.yourdomain.com" or "iot.example.com"
+# Leave empty ("") to run without SSL/HTTPS
+domain_name = "api.yourdomain.com"
+
+# =========================================================
+# After applying with domain_name set:
+# =========================================================
+# 1. Run: terraform output acm_certificate_dns_validation_records
+# 2. Add the DNS records to your domain provider (GoDaddy, Namecheap, etc.)
+# 3. Wait for certificate validation (can take 5-30 minutes)
+# 4. Add an A record or CNAME pointing your domain to the ALB DNS name
+#    Get ALB DNS: terraform output alb_dns_name

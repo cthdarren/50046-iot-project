@@ -28,11 +28,12 @@ resource "aws_service_discovery_service" "availability_service" {
     routing_policy = "MULTIVALUE"
   }
 
-  health_check_custom_config {
-  }
-
   tags = {
     Name = "availability-service-discovery"
+  }
+
+  lifecycle {
+    create_before_destroy = false
   }
 }
 
@@ -51,10 +52,11 @@ resource "aws_service_discovery_service" "analytics_service" {
     routing_policy = "MULTIVALUE"
   }
 
-  health_check_custom_config {
-  }
-
   tags = {
     Name = "analytics-service-discovery"
+  }
+
+  lifecycle {
+    create_before_destroy = false
   }
 }
