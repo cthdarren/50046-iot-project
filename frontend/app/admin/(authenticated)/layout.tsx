@@ -3,7 +3,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "../globals.css";
+import "../../globals.css";
 import { IdProvider } from "@/context/IdContext";
 
 const geistSans = Geist({
@@ -27,8 +27,10 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <IdProvider>
-        {children}
-    </IdProvider>
+        <SidebarProvider>
+          <AppSidebar />
+            <SidebarTrigger />
+                {children}
+        </SidebarProvider>
   );
 }

@@ -43,7 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { MallToiletOccupancy, ParsedToilet, Toilet } from "../../models/models";
+import { MallToiletOccupancy, ParsedToilet, Toilet } from "../../../models/models";
 
 function parseMallToiletOccupancy(
   mall: MallToiletOccupancy
@@ -230,7 +230,7 @@ export default function Dashboard() {
   if (loading) return <div>Loading dashboard…</div>;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex min-h-screen w-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
     <div className="w-10/12">
       <div className="flex items-center py-4">
         <Input

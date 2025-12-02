@@ -12,11 +12,11 @@ export default function Home() {
   const router = useRouter();
 
   // Redirect immediately if ID already exists
-  useEffect(() => {
-    if (id !== null) {
-      router.replace("/admin/dashboard");
-    }
-  }, [id, router]);
+  // useEffect(() => {
+  //   if (id !== null) {
+  //     router.replace("/admin/dashboard");
+  //   }
+  // }, [id, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,11 +28,11 @@ export default function Home() {
     }
 
     setId(parsed);
-    router.push("/dashboard");
+    router.push("/admin/dashboard");
   };
 
   return (
-    <div className="flex w-full h-full justify-center items-center">
+    <div className="flex w-full h-screen justify-center items-center">
     <div className="flex flex-col -mt-40">
       <h1 className="text-xl mb-4">Enter Mall ID</h1>
 
