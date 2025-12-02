@@ -60,3 +60,27 @@ resource "aws_service_discovery_service" "analytics_service" {
     create_before_destroy = false
   }
 }
+
+# Service discovery for frontend service
+resource "aws_service_discovery_service" "frontend_service" {
+  name = "frontend-service"
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.iot_services.id
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+
+    routing_policy = "MULTIVALUE"
+  }
+
+  tags = {
+    Name = "frontend-service-discovery"
+  }
+
+  lifecycle {
+    create_before_destroy = false
+  }
+}

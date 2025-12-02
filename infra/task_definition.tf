@@ -9,6 +9,11 @@ data "aws_ecr_image" "analytics_latest" {
   image_tag       = "analytics-latest"
 }
 
+data "aws_ecr_image" "frontend_latest" {
+  repository_name = aws_ecr_repository.availability_service.name
+  image_tag       = "frontend-latest"
+}
+
 resource "aws_ecs_task_definition" "availability_service" {
   family                   = "availability-service"
   network_mode             = "awsvpc"
@@ -158,6 +163,64 @@ resource "aws_ecs_task_definition" "analytics_service" {
       # Health check (optional but recommended)
       healthCheck = {
         command     = ["CMD-SHELL", "curl -f http://localhost:8002/health || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 60
+      }
+    }
+  ])
+}
+
+# =========================================================
+# Frontend Service Task Definition
+# =========================================================
+
+resource "aws_ecs_task_definition" "frontend_service" {
+  family                   = "frontend-service"
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
+  requires_compatibilities = ["FARGATE"]
+
+  execution_role_arn = aws_iam_role.ecs_task_exec.arn
+  task_role_arn      = aws_iam_role.ecs_task_exec.arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "web"
+      image = "${aws_ecr_repository.availability_service.repository_url}@${data.aws_ecr_image.frontend_latest.image_digest}"
+
+      portMappings = [
+        {
+          containerPort = 3000
+          protocol      = "tcp"
+        }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.frontend_ecs_logs.name
+          "awslogs-region"        = "ap-southeast-1"
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+
+      environment = [
+        {
+          name  = "PORT"
+          value = "3000"
+        },
+        {
+          name  = "NEXT_PUBLIC_API_URL"
+          value = var.domain_name != "" ? "https://${var.domain_name}" : "http://${aws_lb.iot_alb.dns_name}"
+        }
+      ]
+
+      # Health check (optional but recommended)
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
         interval    = 30
         timeout     = 5
         retries     = 3
