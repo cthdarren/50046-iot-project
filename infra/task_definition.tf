@@ -218,14 +218,8 @@ resource "aws_ecs_task_definition" "frontend_service" {
         }
       ]
 
-      # Health check (optional but recommended)
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 60
-      }
+      # Health check removed - ALB health check is sufficient
+      # Container health check was failing due to curl not being available in node:20-slim
     }
   ])
 }
