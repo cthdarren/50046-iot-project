@@ -34,22 +34,9 @@ export default function Home() {
     const fetchMalls = async () => {
       try {
         setIsLoading(true);
-        // ASSUMPTION: getMallsMallsGet() returns Promise<MallDto[]>
         const mallsRes = await getMallsMallsGet();
         console.log(mallsRes)
         const data: MallDto[] = mallsRes.data?? [];
-        // const data:MallDto[] = [
-        //   {
-        //     "id": 0,
-        //     "name": "Mall1",
-        //     "toilets": []
-        //   },
-        //   {
-        //     "id": 1,
-        //     "name": "CCP",
-        //     "toilets": []
-        //   }
-        // ]
         setMalls(data);
       } catch (err) {
         console.error("Failed to load malls", err);

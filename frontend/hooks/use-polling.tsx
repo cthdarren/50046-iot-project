@@ -7,7 +7,7 @@ export function usePolling(fetchOccupancy: () => Promise<void>) {
     // Start polling
     intervalId = setInterval(() => {
       fetchOccupancy();
-    }, 1000); // 1 second
+    }, 3000); // 3 seconds
 
     // Cleanup on unmount
     return () => clearInterval(intervalId);

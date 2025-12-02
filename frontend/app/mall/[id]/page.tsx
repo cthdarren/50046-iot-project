@@ -1,168 +1,212 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   getCubiclesMallsMallIdToiletsToiletIdCubiclesGet,
-  getMallsMallsGet,
   getToiletsMallsMallIdToiletsGet,
+  CubicleDto,
 } from "../../services/availability";
-import type { CubicleDto } from "../../services/availability";
-import { useParams } from "next/navigation";
 import { MallToiletOccupancy, Toilet } from "@/app/models/models";
 import { usePolling } from "@/hooks/use-polling";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 export default function Home() {
   const [data, setData] = useState<MallToiletOccupancy>();
   const [loading, setLoading] = useState(true);
 
+  // NEW: Filter and Sort
+  const [genderFilter, setGenderFilter] = useState("all");
+  const [sortMode, setSortMode] = useState("none"); // "none" | "occ-asc"
+
   const params = useParams();
   const router = useRouter();
 
-  // // --- mock data ---
-  // const toiletdata: MallToiletOccupancy = {
-  //   mall_id: 1,
-  //   toilets: [
-  //     {
-  //       id: 101,
-  //       level: "B1",
-  //       gender: "Male",
-  //       description: "Near Food Court",
-  //       mall_id: 1,
-  //       cubicles: [
-  //         { id: 1, toilet_id: 101, occupied: true, toilet_roll_percentage: 45 },
-  //         { id: 2, toilet_id: 101, occupied: false, toilet_roll_percentage: 80 },
-  //         { id: 3, toilet_id: 101, occupied: true, toilet_roll_percentage: 60 },
-  //       ],
-  //       total_cubicles: 3,
-  //       occupied_count: 2,
-  //       occupancy_percentage: 66.7,
-  //     },
-  //     {
-  //       id: 102,
-  //       level: "L1",
-  //       gender: "Female",
-  //       description: "Next to Zara",
-  //       mall_id: 1,
-  //       cubicles: [
-  //         { id: 4, toilet_id: 102, occupied: false, toilet_roll_percentage: 90 },
-  //         { id: 5, toilet_id: 102, occupied: false, toilet_roll_percentage: 70 },
-  //         { id: 6, toilet_id: 102, occupied: true, toilet_roll_percentage: 50 },
-  //         { id: 7, toilet_id: 102, occupied: false, toilet_roll_percentage: 30 },
-  //       ],
-  //       total_cubicles: 4,
-  //       occupied_count: 1,
-  //       occupancy_percentage: 25,
-  //     },
-  //   ],
-  // };
+  async function fetchOccupancy() {
+    if (params.id === undefined) return;
+    const mallId = parseInt(params.id.toString());
 
-async function fetchOccupancy() {
-  // // mock data for now
-  // setData(toiletdata);
-  // setLoading(false);
-  // console.log(data);
-  // console.log(mallId);
-  // return;
-  if (params.id === undefined) return;
-  const mallId = parseInt(params.id.toString())
-  try {
-    // 1. Fetch all toilets
-    const toiletsRes = await getToiletsMallsMallIdToiletsGet({
-      path: { mall_id: mallId },
-    });
+    try {
+      const toiletsRes = await getToiletsMallsMallIdToiletsGet({
+        path: { mall_id: mallId },
+      });
 
-    const toilets = toiletsRes.data?.toilets ?? [];
+      const toilets = toiletsRes.data?.toilets ?? [];
 
-    // 2. Fetch cubicles for each toilet in parallel
-    const cubicleResponses = await Promise.all(
-      toilets.map((toilet) =>
-        getCubiclesMallsMallIdToiletsToiletIdCubiclesGet({
-          path: { mall_id: mallId, toilet_id: toilet.id },
-        })
-      )
-    );
+      const cubicleResponses = await Promise.all(
+        toilets.map((toilet) =>
+          getCubiclesMallsMallIdToiletsToiletIdCubiclesGet({
+            path: { mall_id: mallId, toilet_id: toilet.id },
+          })
+        )
+      );
 
-    // 3. Build nested structure
-    const nestedToilets: Toilet[] = toilets.map((toilet, index) => {
-      const cubicles: CubicleDto[] =
-        cubicleResponses[index].data?.cubicles ?? [];
+      const nestedToilets: Toilet[] = toilets.map((toilet, index) => {
+        const cubicles: CubicleDto[] = cubicleResponses[index].data?.cubicles ?? [];
+        const occupiedCount = cubicles.filter((c) => c.occupied).length;
+        const total = cubicles.length;
 
-      const occupiedCount = cubicles.filter((c) => c.occupied).length;
-      const total = cubicles.length;
+        return {
+          ...toilet,
+          cubicles,
+          total_cubicles: total,
+          occupied_count: occupiedCount,
+          occupancy_percentage: total ? occupiedCount / total : 0,
+        };
+      });
 
-      return {
-        ...toilet,
-        cubicles,
-        total_cubicles: total,
-        occupied_count: occupiedCount,
-        occupancy_percentage: total ? occupiedCount / total : 0,
-      };
-    });
-
-    // 4. Set state
-    setData(({ mall_id: mallId, toilets: nestedToilets }))
-  } catch (err) {
-    console.error("Failed to fetch mall occuancy", err);
-  } finally {
-    setLoading(false);
+      setData({ mall_id: mallId, toilets: nestedToilets });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
-  // --- end preserved block ---
-}
 
-  usePolling(fetchOccupancy)
+  usePolling(fetchOccupancy);
 
   useEffect(() => {
     if (!params.id) return;
     fetchOccupancy();
   }, [params.id]);
 
-  if (loading) {
-    return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>;
+  if (!data) return <div>No data available.</div>;
+
+  // --------------------------
+  //   GROUP BY LEVEL
+  // --------------------------
+  function groupByLevel(toilets: Toilet[]) {
+    const groups: Record<string, Toilet[]> = {};
+    toilets.forEach((t) => {
+      const level = t.level?.toString() ?? "Unknown";
+      if (!groups[level]) groups[level] = [];
+      groups[level].push(t);
+    });
+    return groups;
   }
 
-  if (!data) {
-    return <div>No data available.</div>;
+  // --------------------------
+  //   SORTING
+  // --------------------------
+  function sortToilets(toilets: Toilet[]) {
+    const sorted = [...toilets];
+
+    if (sortMode === "occ-asc") {
+      sorted.sort((a, b) => a.occupancy_percentage - b.occupancy_percentage);
+    }
+    // else: default = ID order (API already provides in ID order)
+
+    return sorted;
   }
 
+  // --------------------------
+  //   FILTERING
+  // --------------------------
+  const filteredToilets = data.toilets.filter((t) => {
+    if (genderFilter === "all") return true;
+    return t.gender.toLowerCase() === genderFilter;
+  });
+
+  const grouped = groupByLevel(filteredToilets);
 
   return (
-
     <div className="p-4">
-     <button
-            onClick={() => router.push("/")}
-            className="mb-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
-          >
-            ← Back
-          </button>
-      <div className="space-y-4">
-        {data.toilets.map((toilet) => (
-          <div key={toilet.id} className="border rounded p-3">
-            <h2 className="font-bold text-lg">
-              Toilet {toilet.id} — {toilet.gender} ({toilet.level})
-            </h2>
-            <p className="text-sm text-gray-600 mb-2">{toilet.description}</p>
+      <button
+        onClick={() => router.push("/")}
+        className="mb-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
+      >
+        ← Back
+      </button>
 
-            <p>
-              <strong>Occupied:</strong> {toilet.occupied_count}/{toilet.total_cubicles} (
-              {toilet.occupancy_percentage*100}%)
-            </p>
+      {/* FILTER + SORT BAR */}
+      <div className="flex gap-6 mb-6 items-end">
+        {/* GENDER FILTER */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium">Gender</label>
+          <Select value={genderFilter} onValueChange={setGenderFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-            <div className="mt-3 space-y-1">
-              {toilet.cubicles.map((c) => (
-                <div
-                  key={c.id}
-                  className={`p-2 rounded text-sm ${
-                    c.occupied ? "bg-red-200" : "bg-green-200"
-                  }`}
-                >
-                  Cubicle {c.id} —{" "}
-                  <strong>{c.occupied ? "Occupied" : "Available"}</strong> | Roll:{" "}
-                  {c.toilet_roll_percentage}%
+        {/* SORTING */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium">Sort by</label>
+          <Select value={sortMode} onValueChange={setSortMode}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Default (ID order)</SelectItem>
+              <SelectItem value="occ-asc">Occupancy (Low → High)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* COLLAPSIBLE LEVELS */}
+      <div className="space-y-6">
+        {Object.entries(grouped).map(([level, toilets]) => (
+          <Collapsible key={level} className="border rounded-lg p-4">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between text-lg font-bold">
+                {level}
+                <span className="text-sm opacity-60">(expand)</span>
+              </Button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="mt-4 space-y-4">
+              {sortToilets(toilets).map((toilet) => (
+                <div key={toilet.id} className="border rounded p-3">
+                  <h2 className="font-bold text-lg">
+                    {toilet.description} •{" "}
+                    <span className="capitalize">{toilet.gender}</span>
+                  </h2>
+
+                  <p>
+                    Occupancy: {toilet.occupied_count}/{toilet.total_cubicles} (
+                    {(toilet.occupancy_percentage * 100).toFixed(1)}%)
+                  </p>
+
+                  <div className="mt-3 space-y-1">
+                    {toilet.cubicles.map((c) => (
+                      <div
+                        key={c.id}
+                        className={`p-2 rounded text-sm ${
+                          c.occupied ? "bg-red-200" : "bg-green-200"
+                        }`}
+                      >
+                        Cubicle {c.id} —{" "}
+                        <strong>{c.occupied ? "Occupied" : "Available"}</strong> • Roll:{" "}
+                        {c.toilet_roll_percentage}%
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
-            </div>
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
         ))}
       </div>
     </div>

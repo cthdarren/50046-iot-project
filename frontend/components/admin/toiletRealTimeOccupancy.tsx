@@ -81,15 +81,27 @@ export default function RealTimeCubicleOccupancyTable() {
         );
       },
     },
-    {
-      accessorKey: "toilet_roll_percentage",
-      header: "Toilet Roll",
-      cell: ({ row }) => {
-        const value = row.getValue("toilet_roll_percentage");
-        return <div>{value !== null ? `${value}%` : "N/A"}</div>;
-      },
-    },
-  ];
+{
+  accessorKey: "toilet_roll_percentage",
+  header: "Toilet Roll",
+  cell: ({ row }) => {
+    const value = row.getValue("toilet_roll_percentage") as number | null;
+
+    if (value === null || value === undefined) {
+      return <div>N/A</div>;
+    }
+
+    let color = "text-black"; // default
+
+    if (value < 15) {
+      color = "text-red-600 font-bold";
+    } else if (value < 40) {
+      color = "text-orange-500 font-semibold";
+    }
+
+    return <div className={color}>{value}%</div>;
+  },
+}  ];
 
   // ----------------------------
   // REACT TABLE SETUP
