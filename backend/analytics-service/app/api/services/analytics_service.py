@@ -431,10 +431,10 @@ class AnalyticsService:
                         event.updated_at, frequency
                     )
                     toilet_roll_percentage = event.toilet_roll_percentage
-                    if toilet_roll_percentage > 100:
-                        toilet_roll_percentage = 100
-                    if toilet_roll_percentage < 0:
-                        toilet_roll_percentage = 0
+                    # if toilet_roll_percentage > 100:
+                    #     toilet_roll_percentage = 100
+                    # if toilet_roll_percentage < 0:
+                    #     toilet_roll_percentage = 0
                     timestamp_percentage_sum[timestamp] += toilet_roll_percentage
                     timestamp_count[timestamp] += 1
 
