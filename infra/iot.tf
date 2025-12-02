@@ -8,7 +8,7 @@ resource "aws_iot_topic_rule" "to_lambda" {
   name        = "iot_to_lambda"
   description = "Send IoT Core messages to Lambda"
   enabled     = true
-  sql         = "SELECT * FROM 'sensors/#'"
+  sql         = "SELECT * FROM 'cubicle/+/events'"
   sql_version = "2016-03-23"
 
   lambda {
