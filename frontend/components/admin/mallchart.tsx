@@ -22,6 +22,8 @@ import {
   HourlyAggregationItem,
   DailyAggregationItem,
 } from "../../app/services/analytics";
+import { calculateDateRangeDuration } from "@/helpers/calculateDuration";
+import { DateTimePicker } from "./daterangeselector";
 
 
 interface Props {
@@ -45,9 +47,11 @@ function parseLocalISO(iso: string): Date {
   return new Date(iso + "Z");
 }
 
-export default function MallAnalyticsChart({ mallId, startDate, endDate }: Props) {
+export default function MallAnalyticsChart({ mallId }: Props) {
   const [data, setData] = useState<ChartData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [startDate, setStartDate] = useState(new Date("2025-12-02T00:00:00"));
+  const [endDate, setEndDate] = useState(new Date("2025-12-03T00:00:00"));
 
   useEffect(() => {
     const loadAnalytics = async () => {
@@ -100,7 +104,23 @@ export default function MallAnalyticsChart({ mallId, startDate, endDate }: Props
 
   return (
   <div>
-    <h1 className="py-10 font-bold">Toilets Occupied in the last 24 hours</h1>
+    <div className="flex items-start mt-10">
+        <h1 className="font-bold text-2xl flex-1">Overall Mall Analytics</h1>
+        <div className="grid grid-cols-2 gap-6 max-w-xl">
+          <DateTimePicker
+            label="Start Date & Time"
+            value={startDate}
+            onChange={setStartDate}
+          />
+
+          <DateTimePicker
+            label="End Date & Time"
+            value={endDate}
+            onChange={setEndDate}
+          />
+        </div>
+        </div>
+    <h1 className="py-10 font-bold">Toilets Occupied in the last {calculateDateRangeDuration(startDate, endDate)}</h1>
     <ChartContainer
       config={{
         occupied_count: {

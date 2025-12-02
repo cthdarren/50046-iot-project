@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMallAnalyticsAnalyticsAggregationGet, getToiletRollMeanAnalyticsToiletRollMeanGet } from "../../app/services/analytics";
-
 import {
   ChartContainer,
   ChartTooltip,
@@ -18,9 +16,10 @@ import {
 } from "recharts";
 
 import {
-  AggregationDto,
-  HourlyAggregationItem,
-  DailyAggregationItem,
+  getToiletRollMeanAnalyticsToiletRollMeanGet,
+  HourlyMeanPercentageItem,
+  DailyMeanPercentageItem,
+  MeanPercentageDto,
 } from "../../app/services/analytics";
 import { calculateDateRangeDuration } from "@/helpers/calculateDuration";
 
@@ -33,14 +32,14 @@ interface Props {
 
 type ChartData = {
   label: string;
-  occupied_count: number;
+  mean: number;
 };
 
 function parseUTCToLocal(iso: string): Date {
   return new Date(iso + "Z");
 }
 
-export default function ToiletAnalyticsChart({
+export default function ToiletRollMeanChart({
   mallId,
   toiletId,
   startDate,
@@ -52,8 +51,9 @@ export default function ToiletAnalyticsChart({
   useEffect(() => {
     const loadAnalytics = async () => {
       setIsLoading(true);
+
       try {
-        const res = await getMallAnalyticsAnalyticsAggregationGet({
+        const res = await getToiletRollMeanAnalyticsToiletRollMeanGet({
           query: {
             mall_id: mallId,
             toilet_id: toiletId,
@@ -62,32 +62,33 @@ export default function ToiletAnalyticsChart({
           },
         });
 
-        const frequency = res.data?.frequency;
-        const rawAggregation = res.data?.aggregation;
+        const payload: MeanPercentageDto = res.data!;
+        const frequency = payload.frequency;
+        const raw = payload.mean_percentages;
 
         let mapped: ChartData[] = [];
 
         if (frequency === "hour") {
-          mapped = (rawAggregation as HourlyAggregationItem[]).map((item) => ({
+          mapped = (raw as HourlyMeanPercentageItem[]).map((item) => ({
             label: parseUTCToLocal(item.hour).toLocaleTimeString("en-SG", {
               hour: "2-digit",
               minute: "2-digit",
             }),
-            occupied_count: item.occupied_count,
+            mean: item.mean_percentage ?? 0,
           }));
-        } else if (frequency === "day") {
-          mapped = (rawAggregation as DailyAggregationItem[]).map((item) => ({
+        } else {
+          mapped = (raw as DailyMeanPercentageItem[]).map((item) => ({
             label: parseUTCToLocal(item.day).toLocaleDateString("en-SG", {
               month: "short",
               day: "numeric",
             }),
-            occupied_count: item.occupied_count,
+            mean: item.mean_percentage ?? 0,
           }));
         }
 
         setData(mapped);
       } catch (e) {
-        console.error("Toilet analytics fetch error:", e);
+        console.error("Toilet roll mean analytics fetch error:", e);
       } finally {
         setIsLoading(false);
       }
@@ -96,17 +97,19 @@ export default function ToiletAnalyticsChart({
     loadAnalytics();
   }, [mallId, toiletId, startDate, endDate]);
 
-  if (isLoading) return <p>Loading toilet analytics...</p>;
+  if (isLoading) return <p>Loading toilet roll mean analytics...</p>;
 
   return (
     <div>
-      <h1 className="font-bold pb-10">Cubicles Occupied in the last {calculateDateRangeDuration(startDate, endDate)}</h1>
+      <h1 className="font-bold pb-10">
+        Toilet Roll (Mean %) in the Last {calculateDateRangeDuration(startDate, endDate)}
+      </h1>
 
       <ChartContainer
         config={{
-          occupied_count: {
-            label: "Occupied Count",
-            color: "hsl(var(--chart-1))",
+          mean: {
+            label: "Mean Toilet Roll (%)",
+            color: "hsl(var(--chart-2))",
           },
         }}
         className="w-full h-[300px]"
@@ -114,11 +117,11 @@ export default function ToiletAnalyticsChart({
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="label" />
-          <YAxis />
+          <YAxis domain={[0, 100]} />
           <ChartTooltip content={<ChartTooltipContent />} />
           <Line
             type="monotone"
-            dataKey="occupied_count"
+            dataKey="mean"
             stroke="black"
             strokeWidth={2}
           />
