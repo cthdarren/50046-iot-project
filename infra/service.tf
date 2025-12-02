@@ -55,6 +55,17 @@ resource "aws_security_group_rule" "analytics_to_availability" {
   description              = "Allow analytics service to call availability service"
 }
 
+# Separate ingress rule to allow traffic from ALB to frontend service
+resource "aws_security_group_rule" "frontend_from_alb" {
+  type                     = "ingress"
+  from_port                = 3000
+  to_port                  = 3000
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.alb_sg.id
+  security_group_id        = aws_security_group.service_sg.id
+  description              = "Allow traffic from ALB to frontend service"
+}
+
 # Fargate ECS Service
 resource "aws_ecs_service" "availability_service" {
   name            = "availability-service"
@@ -128,5 +139,45 @@ resource "aws_ecs_service" "analytics_service" {
 
   tags = {
     Name = "analytics-service"
+  }
+}
+
+# =========================================================
+# Frontend Service
+# =========================================================
+
+# Fargate ECS Service for Frontend
+resource "aws_ecs_service" "frontend_service" {
+  name            = "frontend-service"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.frontend_service.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets = [
+      aws_subnet.private_1.id,
+      aws_subnet.private_2.id
+    ]
+    security_groups  = [aws_security_group.service_sg.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.frontend_service_tg.arn
+    container_name   = "web"
+    container_port   = 3000
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.frontend_service.arn
+  }
+
+  depends_on = [
+    aws_lb_listener.http
+  ]
+
+  tags = {
+    Name = "frontend-service"
   }
 }

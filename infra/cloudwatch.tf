@@ -41,3 +41,25 @@ resource "aws_cloudwatch_log_group" "analytics_app_logs" {
     Environment = "production"
   }
 }
+
+# CloudWatch Log Group for ECS Tasks - Frontend Service
+resource "aws_cloudwatch_log_group" "frontend_ecs_logs" {
+  name              = "/ecs/frontend-service"
+  retention_in_days = 7
+
+  tags = {
+    Name        = "frontend-service-logs"
+    Environment = "production"
+  }
+}
+
+# Optional: Log group for application-specific logs - Frontend Service
+resource "aws_cloudwatch_log_group" "frontend_app_logs" {
+  name              = "/aws/ecs/frontend-service-app"
+  retention_in_days = 7
+
+  tags = {
+    Name        = "frontend-service-app-logs"
+    Environment = "production"
+  }
+}
