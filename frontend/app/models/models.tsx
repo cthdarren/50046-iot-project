@@ -26,4 +26,5 @@ export type ParsedToilet = {
   name: string;
   level: string;
   occupancy: string;
+  hasZeroRoll: boolean;
 };

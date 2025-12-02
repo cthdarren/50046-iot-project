@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/table"
 import { ColumnDef, ColumnFiltersState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, SortingState, useReactTable, VisibilityState } from "@tanstack/react-table";
 import { Button } from "../ui/button";
-import { table } from "console";
 import { ArrowUpDown, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import React from "react";
@@ -25,42 +24,6 @@ import { getToiletsMallsMallIdToiletsGet, getCubiclesMallsMallIdToiletsToiletIdC
 import { usePolling } from "@/hooks/use-polling";
 import { useRouter } from "next/navigation";
 
-// const toiletdata: MallToiletOccupancy = {
-//     mall_id: 1,
-//     toilets: [
-//       {
-//         id: 101,
-//         level: "B1",
-//         gender: "Male",
-//         description: "Near Food Court",
-//         mall_id: 1,
-//         cubicles: [
-//           { id: 1, toilet_id: 101, occupied: true, toilet_roll_percentage: 45 },
-//           { id: 2, toilet_id: 101, occupied: false, toilet_roll_percentage: 80 },
-//           { id: 3, toilet_id: 101, occupied: true, toilet_roll_percentage: 60 },
-//         ],
-//         total_cubicles: 3,
-//         occupied_count: 2,
-//         occupancy_percentage: 66.7,
-//       },
-//       {
-//         id: 102,
-//         level: "L1",
-//         gender: "Female",
-//         description: "Next to Zara",
-//         mall_id: 1,
-//         cubicles: [
-//           { id: 4, toilet_id: 102, occupied: false, toilet_roll_percentage: 90 },
-//           { id: 5, toilet_id: 102, occupied: false, toilet_roll_percentage: 70 },
-//           { id: 6, toilet_id: 102, occupied: true, toilet_roll_percentage: 50 },
-//           { id: 7, toilet_id: 102, occupied: false, toilet_roll_percentage: 30 },
-//         ],
-//         total_cubicles: 4,
-//         occupied_count: 1,
-//         occupancy_percentage: 25,
-//       },
-//     ],
-//   }
 
 
 export default function RealTimeOccupancyTable() {
@@ -75,6 +38,8 @@ export default function RealTimeOccupancyTable() {
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
   const router = useRouter();
+
+
 
  const columns: ColumnDef<ParsedToilet>[] = [
   {
@@ -107,6 +72,24 @@ export default function RealTimeOccupancyTable() {
       return <div className="text-right font-medium">{row.getValue("occupancy")}</div>
     },
   },
+{
+  accessorKey: "hasZeroRoll",
+  header: () => <div className="text-right">Status</div>,
+  cell: ({ row }) => {
+    const isZero = row.getValue("hasZeroRoll") as boolean;
+
+    return (
+      <div className="text-right font-medium">
+        {isZero ? (
+          <span className="text-red-600 font-bold">🔴 Low Toilet Roll</span>
+        ) : (
+          <span className="text-green-600">🟢 OK</span>
+        )}
+      </div>
+    );
+  },
+},
+
   {
     accessorKey: "actions",
     header: () => <div className="text-right">Actions</div>,
@@ -157,9 +140,9 @@ function parseMallToiletOccupancy(
     name: t.description,
     level: t.level,
     occupancy: `${t.occupied_count}/${t.total_cubicles}`,
+    hasZeroRoll: t.cubicles.some((c) => (c.toilet_roll_percentage ?? 0) < 15),
   }));
 }
-
 
     async function fetchOccupancy() {
       // setData(parseMallToiletOccupancy(toiletdata))
@@ -254,7 +237,7 @@ function parseMallToiletOccupancy(
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="overflow-hidden rounded-md border">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
