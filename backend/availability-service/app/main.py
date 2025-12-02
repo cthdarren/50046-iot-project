@@ -9,6 +9,7 @@ from api.routers.malls_router import router as malls_router
 from api.routers.toilets_router import router as toilets_router
 from db.database import engine, wait_for_db
 from db.models import Base
+from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager
@@ -23,6 +24,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Availability Service", lifespan=lifespan, root_path="/availability"
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 app.include_router(malls_router)
 app.include_router(toilets_router)
 app.include_router(cubicles_router)
