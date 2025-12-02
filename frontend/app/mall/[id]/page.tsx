@@ -19,51 +19,7 @@ export default function Home() {
   const params = useParams();
   const router = useRouter();
 
-  // // --- mock data ---
-  // const toiletdata: MallToiletOccupancy = {
-  //   mall_id: 1,
-  //   toilets: [
-  //     {
-  //       id: 101,
-  //       level: "B1",
-  //       gender: "Male",
-  //       description: "Near Food Court",
-  //       mall_id: 1,
-  //       cubicles: [
-  //         { id: 1, toilet_id: 101, occupied: true, toilet_roll_percentage: 45 },
-  //         { id: 2, toilet_id: 101, occupied: false, toilet_roll_percentage: 80 },
-  //         { id: 3, toilet_id: 101, occupied: true, toilet_roll_percentage: 60 },
-  //       ],
-  //       total_cubicles: 3,
-  //       occupied_count: 2,
-  //       occupancy_percentage: 66.7,
-  //     },
-  //     {
-  //       id: 102,
-  //       level: "L1",
-  //       gender: "Female",
-  //       description: "Next to Zara",
-  //       mall_id: 1,
-  //       cubicles: [
-  //         { id: 4, toilet_id: 102, occupied: false, toilet_roll_percentage: 90 },
-  //         { id: 5, toilet_id: 102, occupied: false, toilet_roll_percentage: 70 },
-  //         { id: 6, toilet_id: 102, occupied: true, toilet_roll_percentage: 50 },
-  //         { id: 7, toilet_id: 102, occupied: false, toilet_roll_percentage: 30 },
-  //       ],
-  //       total_cubicles: 4,
-  //       occupied_count: 1,
-  //       occupancy_percentage: 25,
-  //     },
-  //   ],
-  // };
-
 async function fetchOccupancy() {
-  // // mock data for now
-  // setData(toiletdata);
-  // setLoading(false);
-  // console.log(data);
-  // console.log(mallId);
-  // return;
   if (params.id === undefined) return;
   const mallId = parseInt(params.id.toString())
   try {
@@ -139,12 +95,11 @@ async function fetchOccupancy() {
         {data.toilets.map((toilet) => (
           <div key={toilet.id} className="border rounded p-3">
             <h2 className="font-bold text-lg">
-              Toilet {toilet.id} — {toilet.gender} ({toilet.level})
+              {`${toilet.description} `} - <span className="capitalize">{toilet.gender}</span>
             </h2>
-            <p className="text-sm text-gray-600 mb-2">{toilet.description}</p>
 
             <p>
-              <strong>Occupied:</strong> {toilet.occupied_count}/{toilet.total_cubicles} (
+              <span>Occupancy:</span> {toilet.occupied_count}/{toilet.total_cubicles} (
               {toilet.occupancy_percentage*100}%)
             </p>
 
