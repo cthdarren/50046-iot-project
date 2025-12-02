@@ -6,7 +6,6 @@ import {
     CubicleDto,
   getCubiclesMallsMallIdToiletsToiletIdCubiclesGet,
   getToiletsMallsMallIdToiletsGet,
-  ToiletDto
 } from "@/app/services/availability";
 
 import * as React from "react"
@@ -22,16 +21,13 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -45,10 +41,15 @@ import {
 } from "@/components/ui/table"
 import { MallToiletOccupancy, ParsedToilet, Toilet } from "../../../models/models";
 
+function viewHistoricalData(lol: string){
+    console.log(lol)
+}
+
 function parseMallToiletOccupancy(
   mall: MallToiletOccupancy
 ): ParsedToilet[] {
   return mall.toilets.map((t) => ({
+    id: t.id,
     name: t.description,
     level: t.level,
     occupancy: `${t.occupied_count}/${t.total_cubicles}`,
@@ -93,6 +94,10 @@ function parseMallToiletOccupancy(
 //   }
 
 export const columns: ColumnDef<ParsedToilet>[] = [
+
+  {
+    accessorKey: "id",
+  },
   {
     accessorKey: "name",
     header: "Name",
@@ -131,7 +136,7 @@ export const columns: ColumnDef<ParsedToilet>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex justify-end"> 
-            <Button variant="default">
+            <Button variant="default" onClick={() => viewHistoricalData(row.getValue("id"))}>
               <span> View Historical Data </span>
             </Button>
         </div>

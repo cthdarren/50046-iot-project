@@ -22,6 +22,7 @@ export type MallToiletOccupancy = {
 };
 
 export type ParsedToilet = {
+  id: number;
   name: string;
   level: string;
   occupancy: string;
