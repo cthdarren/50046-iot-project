@@ -20,3 +20,9 @@ export type MallToiletOccupancy = {
   mall_id: number;
   toilets: Toilet[];
 };
+
+export type ParsedToilet = {
+  name: string;
+  level: string;
+  occupancy: string;
+};

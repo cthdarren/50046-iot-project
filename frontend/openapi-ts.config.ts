@@ -7,7 +7,7 @@ export default [
         plugins: [
         {
           name: '@hey-api/client-axios',
-          runtimeConfigPath: '../../hey-api.ts', 
+          runtimeConfigPath: '../../hey-api-analytics.ts', 
         },
       ],
     },
@@ -17,7 +17,7 @@ export default [
         plugins: [
         {
           name: '@hey-api/client-axios',
-          runtimeConfigPath: '../../hey-api.ts', 
+          runtimeConfigPath: '../../hey-api-avail.ts', 
         },
       ],
     },

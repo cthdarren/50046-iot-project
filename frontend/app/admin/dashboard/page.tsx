@@ -43,13 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { MallToiletOccupancy, Toilet } from "../../models/models";
-
-type ParsedToilet = {
-  name: string;
-  level: string;
-  occupancy: string;
-};
+import { MallToiletOccupancy, ParsedToilet, Toilet } from "../../models/models";
 
 function parseMallToiletOccupancy(
   mall: MallToiletOccupancy
@@ -61,42 +55,42 @@ function parseMallToiletOccupancy(
   }));
 }
 
-const toiletdata: MallToiletOccupancy = {
-    mall_id: 1,
-    toilets: [
-      {
-        id: 101,
-        level: "B1",
-        gender: "Male",
-        description: "Near Food Court",
-        mall_id: 1,
-        cubicles: [
-          { id: 1, toilet_id: 101, occupied: true, toilet_roll_percentage: 45 },
-          { id: 2, toilet_id: 101, occupied: false, toilet_roll_percentage: 80 },
-          { id: 3, toilet_id: 101, occupied: true, toilet_roll_percentage: 60 },
-        ],
-        total_cubicles: 3,
-        occupied_count: 2,
-        occupancy_percentage: 66.7,
-      },
-      {
-        id: 102,
-        level: "L1",
-        gender: "Female",
-        description: "Next to Zara",
-        mall_id: 1,
-        cubicles: [
-          { id: 4, toilet_id: 102, occupied: false, toilet_roll_percentage: 90 },
-          { id: 5, toilet_id: 102, occupied: false, toilet_roll_percentage: 70 },
-          { id: 6, toilet_id: 102, occupied: true, toilet_roll_percentage: 50 },
-          { id: 7, toilet_id: 102, occupied: false, toilet_roll_percentage: 30 },
-        ],
-        total_cubicles: 4,
-        occupied_count: 1,
-        occupancy_percentage: 25,
-      },
-    ],
-  }
+// const toiletdata: MallToiletOccupancy = {
+//     mall_id: 1,
+//     toilets: [
+//       {
+//         id: 101,
+//         level: "B1",
+//         gender: "Male",
+//         description: "Near Food Court",
+//         mall_id: 1,
+//         cubicles: [
+//           { id: 1, toilet_id: 101, occupied: true, toilet_roll_percentage: 45 },
+//           { id: 2, toilet_id: 101, occupied: false, toilet_roll_percentage: 80 },
+//           { id: 3, toilet_id: 101, occupied: true, toilet_roll_percentage: 60 },
+//         ],
+//         total_cubicles: 3,
+//         occupied_count: 2,
+//         occupancy_percentage: 66.7,
+//       },
+//       {
+//         id: 102,
+//         level: "L1",
+//         gender: "Female",
+//         description: "Next to Zara",
+//         mall_id: 1,
+//         cubicles: [
+//           { id: 4, toilet_id: 102, occupied: false, toilet_roll_percentage: 90 },
+//           { id: 5, toilet_id: 102, occupied: false, toilet_roll_percentage: 70 },
+//           { id: 6, toilet_id: 102, occupied: true, toilet_roll_percentage: 50 },
+//           { id: 7, toilet_id: 102, occupied: false, toilet_roll_percentage: 30 },
+//         ],
+//         total_cubicles: 4,
+//         occupied_count: 1,
+//         occupancy_percentage: 25,
+//       },
+//     ],
+//   }
 
 export const columns: ColumnDef<ParsedToilet>[] = [
   {
@@ -182,10 +176,10 @@ export default function Dashboard() {
     if (!id) return;
 
     async function fetchOccupancy(mallId: number) {
-      setData(parseMallToiletOccupancy(toiletdata))
-      setLoading(false);
-      console.log(data)
-      return;
+      // setData(parseMallToiletOccupancy(toiletdata))
+      // setLoading(false);
+      // console.log(data)
+      // return;
       try {
         // 1. Fetch all toilets
         const toiletsRes = await getToiletsMallsMallIdToiletsGet({
@@ -221,7 +215,7 @@ export default function Dashboard() {
         });
 
         // 4. Set state
-        // setData(parseMallToiletOccupancy({ mall_id: mallId, toilets: nestedToilets }))
+        setData(parseMallToiletOccupancy({ mall_id: mallId, toilets: nestedToilets }))
       } catch (err) {
         console.error("Failed to fetch mall occuancy", err);
       } finally {
