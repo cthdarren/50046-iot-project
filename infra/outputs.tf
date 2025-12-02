@@ -12,7 +12,7 @@ output "rds_proxy_endpoint" {
 
 output "ecr_repository_uri" {
   description = "URI of the ECR repository"
-  value       = aws_ecr_repository.app.repository_url
+  value       = aws_ecr_repository.availability_service.repository_url
 }
 
 # =========================================================
@@ -55,4 +55,51 @@ output "iot_public_key" {
   description = "Public key for the device certificate"
   value       = aws_iot_certificate.sensor_cert.public_key
   sensitive   = true
+}
+
+# =========================================================
+# Shared ALB Outputs
+# =========================================================
+
+output "alb_dns" {
+  description = "Public DNS name of the shared Application Load Balancer"
+  value       = aws_lb.iot_alb.dns_name
+}
+
+output "alb_url" {
+  description = "Public URL of the shared ALB"
+  value       = var.domain_name != "" ? "https://${var.domain_name}" : "http://${aws_lb.iot_alb.dns_name}"
+}
+
+output "alb_https_url" {
+  description = "HTTPS URL when using custom domain"
+  value       = var.domain_name != "" ? "https://${var.domain_name}" : "Not configured - set domain_name variable"
+}
+
+# =========================================================
+# Availability Service Outputs
+# =========================================================
+
+output "availability_service_url" {
+  description = "Public URL to access the availability service API"
+  value       = var.domain_name != "" ? "https://${var.domain_name}/availability" : "http://${aws_lb.iot_alb.dns_name}/availability"
+}
+
+output "availability_service_target_group_arn" {
+  description = "ARN of the target group for health check debugging"
+  value       = aws_lb_target_group.availability_service_tg.arn
+}
+
+# =========================================================
+# Analytics Service Outputs
+# =========================================================
+
+output "analytics_service_url" {
+  description = "Public URL to access the analytics service API"
+  value       = var.domain_name != "" ? "https://${var.domain_name}/analytics" : "http://${aws_lb.iot_alb.dns_name}/analytics"
+}
+
+output "analytics_service_target_group_arn" {
+  description = "ARN of the analytics service target group"
+  value       = aws_lb_target_group.analytics_service_tg.arn
 }

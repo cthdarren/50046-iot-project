@@ -82,18 +82,3 @@ class CubiclesRepo:
         await self.db.execute(statement)
         await self.db.commit()
         return True
-
-    async def get_cubicle_state(self, cubicle_id: int) -> CubicleState | None:
-        stmt = select(CubicleState).where(CubicleState.cubicle_id == cubicle_id)
-        result = await self.db.execute(stmt)
-        return result.scalar_one_or_none()
-
-    async def get_latest_cubicle_event(self, cubicle_id: int) -> CubicleEvent | None:
-        stmt = (
-            select(CubicleEvent)
-            .where(CubicleEvent.cubicle_id == cubicle_id)
-            .order_by(CubicleEvent.timestamp.desc())
-            .limit(1)
-        )
-        result = await self.db.execute(stmt)
-        return result.scalar_one_or_none()

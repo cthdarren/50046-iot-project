@@ -1,6 +1,6 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from core.error_codes import ErrorCodes
+from shared.core.error_codes import ErrorCodes
 
 
 class ApiException(Exception):
@@ -57,3 +57,22 @@ async def exception_handler(request: Request, exc: Exception) -> JSONResponse:
         status_code=exc.status_code,
         content={"detail": exc.detail},
     )
+
+async def handle_api_exception(status_code: int) -> None:
+    match status_code:
+        case 404:
+            raise NotFoundException("Events not found")
+        case 401:
+            raise UnauthorizedException("Unauthorized")
+        case 403:
+            raise ForbiddenException("Forbidden")
+        case 400:
+            raise BadRequestException("Bad request")
+        case 409:
+            raise DuplicateException("Duplicate error")
+        case 501:
+            raise NotImplementedException("Not implemented")
+        case 503:
+            raise ServiceUnavailableException("Service unavailable")
+        case _:
+            raise InternalServerErrorException("Internal server error")

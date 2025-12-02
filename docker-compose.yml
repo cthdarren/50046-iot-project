@@ -63,10 +63,9 @@ services:
       - "8080:8080" # Local invocation endpoint
 
   availability-service:
-    # Placeholder backend service. Replace command once you add code.
     build:
-      context: ./backend/availability-service
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: availability-service/Dockerfile
     container_name: availability-service
     env_file:
       - .env
@@ -77,6 +76,21 @@ services:
         condition: service_started
     ports:
       - "${AVAILABILITY_SERVICE_PORT}:8001"
+    volumes:
+      - ./.env:/app/.env
+
+  analytics-service:
+    build:
+      context: ./backend
+      dockerfile: analytics-service/Dockerfile
+    container_name: analytics-service
+    env_file:
+      - .env
+    depends_on:
+      availability-service:
+        condition: service_started
+    ports:
+      - "${ANALYTICS_SERVICE_PORT}:8002"
     volumes:
       - ./.env:/app/.env
 
