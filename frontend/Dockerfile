@@ -1,18 +1,22 @@
-
-FROM node:20-slim AS base
+FROM node:20-slim AS build
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
-COPY . /app
-WORKDIR /app
 
-FROM base AS build
+WORKDIR /app
+COPY . .
+
 RUN pnpm install --frozen-lockfile
 RUN pnpm run build
 
-FROM base
-COPY --from=build /app/node_modules /app/node_modules
-COPY --from=build /app/.next /app/.next 
+# --- Production Image ---
+FROM node:20-slim
+WORKDIR /app
+
+# Copy standalone build (self-contained)
+COPY --from=build /app/.next/standalone ./
+COPY --from=build /app/.next/static ./.next/static
+
 EXPOSE 3000
-CMD [ "pnpm", "start" ]
+CMD ["node", "server.js"]
