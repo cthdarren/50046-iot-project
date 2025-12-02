@@ -10,6 +10,7 @@ import {
 import type { CubicleDto } from "../../services/availability";
 import { useParams } from "next/navigation";
 import { MallToiletOccupancy, Toilet } from "@/app/models/models";
+import { usePolling } from "@/hooks/use-polling";
 
 export default function Home() {
   const [data, setData] = useState<MallToiletOccupancy>();
@@ -109,23 +110,8 @@ async function fetchOccupancy() {
   // --- end preserved block ---
 }
 
-    
-function usePolling(fetchOccupancy: () => Promise<void>) {
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    // Start polling
-    intervalId = setInterval(() => {
-      fetchOccupancy();
-    }, 1000); // 1 second
-
-    // Cleanup on unmount
-    return () => clearInterval(intervalId);
-  }, [fetchOccupancy]);
-}
-
-
   usePolling(fetchOccupancy)
+
   useEffect(() => {
     if (!params.id) return;
     fetchOccupancy();
