@@ -1,3 +1,14 @@
+# Data source to get the latest image digest from ECR
+data "aws_ecr_image" "availability_latest" {
+  repository_name = aws_ecr_repository.availability_service.name
+  image_tag       = "availability-latest"
+}
+
+data "aws_ecr_image" "analytics_latest" {
+  repository_name = aws_ecr_repository.availability_service.name
+  image_tag       = "analytics-latest"
+}
+
 resource "aws_ecs_task_definition" "availability_service" {
   family                   = "availability-service"
   network_mode             = "awsvpc"
@@ -11,7 +22,7 @@ resource "aws_ecs_task_definition" "availability_service" {
   container_definitions = jsonencode([
     {
       name  = "web"
-      image = "${aws_ecr_repository.availability_service.repository_url}:latest"
+      image = "${aws_ecr_repository.availability_service.repository_url}@${data.aws_ecr_image.availability_latest.image_digest}"
 
       portMappings = [
         {
@@ -88,7 +99,7 @@ resource "aws_ecs_task_definition" "analytics_service" {
   container_definitions = jsonencode([
     {
       name  = "web"
-      image = "${aws_ecr_repository.availability_service.repository_url}:analytics-latest"
+      image = "${aws_ecr_repository.availability_service.repository_url}@${data.aws_ecr_image.analytics_latest.image_digest}"
 
       portMappings = [
         {

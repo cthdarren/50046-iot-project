@@ -64,24 +64,16 @@ push-availability: ecr-login build-availability ## Build and push availability-s
 
 deploy-availability: push-availability ## Build, push, and deploy availability-service
 	@echo ""
-	@echo "$(YELLOW)Updating ECS service: $(AVAILABILITY_SERVICE)...$(NC)"
-	@aws ecs update-service \
-		--cluster $(CLUSTER_NAME) \
-		--service $(AVAILABILITY_SERVICE) \
-		--force-new-deployment \
-		--region $(REGION) \
-		--output table \
-		--query 'service.{Service:serviceName,Status:status,Running:runningCount,Desired:desiredCount}' && \
-	echo "$(GREEN)✓ ECS service update initiated$(NC)" && \
-	echo "" && \
-	echo "$(YELLOW)Monitor deployment with:$(NC)" && \
-	echo "  make watch-deployment-availability" && \
-	echo "" && \
-	echo "$(YELLOW)View logs with:$(NC)" && \
-	echo "  make logs-availability" && \
-	echo "" && \
-	echo "$(YELLOW)Check service URL:$(NC)" && \
-	echo "  curl \$$(cd $(INFRA_DIR) && terraform output -raw availability_service_url)/availability/health"
+	@./scripts/update-task-definition.sh $(AVAILABILITY_SERVICE) $(CLUSTER_NAME) $(REGION)
+	@echo ""
+	@echo "$(YELLOW)Monitor deployment with:$(NC)"
+	@echo "  make watch-deployment-availability"
+	@echo ""
+	@echo "$(YELLOW)View logs with:$(NC)"
+	@echo "  make logs-availability"
+	@echo ""
+	@echo "$(YELLOW)Check service URL:$(NC)"
+	@echo "  curl \$$(cd $(INFRA_DIR) && terraform output -raw availability_service_url)/availability/health"
 
 status-availability: ## Check availability-service status
 	@echo "$(YELLOW)Checking $(AVAILABILITY_SERVICE) status...$(NC)"
@@ -161,21 +153,13 @@ push-analytics: ecr-login build-analytics ## Build and push analytics-service to
 
 deploy-analytics: push-analytics ## Build, push, and deploy analytics-service
 	@echo ""
-	@echo "$(YELLOW)Updating ECS service: $(ANALYTICS_SERVICE)...$(NC)"
-	@aws ecs update-service \
-		--cluster $(CLUSTER_NAME) \
-		--service $(ANALYTICS_SERVICE) \
-		--force-new-deployment \
-		--region $(REGION) \
-		--output table \
-		--query 'service.{Service:serviceName,Status:status,Running:runningCount,Desired:desiredCount}' && \
-	echo "$(GREEN)✓ ECS service update initiated$(NC)" && \
-	echo "" && \
-	echo "$(YELLOW)Monitor deployment with:$(NC)" && \
-	echo "  make watch-deployment-analytics" && \
-	echo "" && \
-	echo "$(YELLOW)View logs with:$(NC)" && \
-	echo "  make logs-analytics"
+	@./scripts/update-task-definition.sh $(ANALYTICS_SERVICE) $(CLUSTER_NAME) $(REGION)
+	@echo ""
+	@echo "$(YELLOW)Monitor deployment with:$(NC)"
+	@echo "  make watch-deployment-analytics"
+	@echo ""
+	@echo "$(YELLOW)View logs with:$(NC)"
+	@echo "  make logs-analytics"
 
 status-analytics: ## Check analytics-service status
 	@echo "$(YELLOW)Checking $(ANALYTICS_SERVICE) status...$(NC)"
