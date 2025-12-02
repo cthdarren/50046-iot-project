@@ -10,8 +10,12 @@ class LatestCubicleStateDto(BaseModel):
 
 class LatestToiletStateDto(BaseModel):
     toilet_id: int
+    level: str
+    gender: str
+    description: str
     cubicles: List[LatestCubicleStateDto]
 
 class LatestMallStateDto(BaseModel):
     mall_id: int
+    name: str
     toilets: List[LatestToiletStateDto]

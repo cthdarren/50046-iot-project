@@ -7,6 +7,7 @@ from typing import Sequence, Optional, List
 from db.models import CubicleEvent, CubicleState, Cubicle, Toilet
 from api.services.toilets_service import ToiletsService
 from api.services.cubicles_service import CubiclesService
+from api.services.malls_service import MallsService
 from shared.core.exceptions import NotFoundException
 from shared.schemas.latest_state import (
     LatestCubicleStateDto,
@@ -26,15 +27,18 @@ from typing import Union
 
 
 class EventsService:
+
     def __init__(
         self,
         db: AsyncSession = Depends(get_db),
         toilets_service: ToiletsService = Depends(),
         cubicles_service: CubiclesService = Depends(),
+        malls_service: MallsService = Depends(),
     ) -> None:
         self.events_repo = EventsRepo(db)
         self.toilets_service = toilets_service
         self.cubicles_service = cubicles_service
+        self.malls_service = malls_service
 
     async def get_latest_cubicle_state(
         self, mall_id: int, toilet_id: int, cubicle_id: int
@@ -60,15 +64,18 @@ class EventsService:
     async def get_latest_toilet_state(
         self, mall_id: int, toilet_id: int
     ) -> LatestToiletStateDto:
-        if not await self.toilets_service.get_toilet(
+        if not (toilet := await self.toilets_service.get_toilet(
             mall_id=mall_id, toilet_id=toilet_id
-        ):
+        )):
             raise NotFoundException(detail="Toilet not found.")
         cubicle_states: Sequence[CubicleState] = (
             await self.events_repo.get_latest_toilet_state(toilet_id)
         )
         return LatestToiletStateDto(
             toilet_id=toilet_id,
+            level=toilet.__getattribute__("level"),
+            gender=toilet.__getattribute__("gender"),
+            description=toilet.__getattribute__("description"),
             cubicles=[
                 LatestCubicleStateDto(
                     cubicle_id=cubicle_state.__getattribute__("cubicle_id"),
@@ -83,11 +90,13 @@ class EventsService:
         )
 
     async def get_latest_mall_state(self, mall_id: int) -> LatestMallStateDto:
+        if not (mall := await self.malls_service.get_mall_by_id(id=mall_id)):
+            raise NotFoundException(detail="Mall not found.")
         toilets: Sequence[Toilet] = await self.toilets_service.get_toilets(
             mall_id=mall_id
         )
         latest_mall_state: LatestMallStateDto = LatestMallStateDto(
-            mall_id=mall_id, toilets=[]
+            mall_id=mall_id, name=mall.__getattribute__("name"), toilets=[]
         )
         for toilet in toilets:
             toilet_state: LatestToiletStateDto = await self.get_latest_toilet_state(
@@ -96,6 +105,9 @@ class EventsService:
             latest_mall_state.toilets.append(
                 LatestToiletStateDto(
                     toilet_id=toilet.__getattribute__("id"),
+                    level=toilet.__getattribute__("level"),
+                    gender=toilet.__getattribute__("gender"),
+                    description=toilet.__getattribute__("description"),
                     cubicles=[
                         LatestCubicleStateDto(
                             cubicle_id=cubicle_state.__getattribute__("cubicle_id"),
