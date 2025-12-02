@@ -14,6 +14,9 @@ RUN pnpm run build
 FROM node:20-slim
 WORKDIR /app
 
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Copy standalone build (self-contained)
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
