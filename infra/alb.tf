@@ -249,3 +249,76 @@ resource "aws_lb_listener_rule" "analytics_service" {
     Name = "analytics-service-rule"
   }
 }
+
+# =========================================================
+# Frontend Service
+# =========================================================
+
+# Target Group for Frontend Service
+resource "aws_lb_target_group" "frontend_service_tg" {
+  name        = "frontend-service-tg"
+  port        = 3000
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    path                = "/"
+    protocol            = "HTTP"
+    matcher             = "200"
+  }
+
+  deregistration_delay = 30
+
+  tags = {
+    Name = "frontend-service-target-group"
+  }
+}
+
+# HTTP Listener Rule - forward root path to frontend service (lowest priority)
+resource "aws_lb_listener_rule" "frontend_service" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 300
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.frontend_service_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/*"]
+    }
+  }
+
+  tags = {
+    Name = "frontend-service-rule"
+  }
+}
+
+# HTTPS Listener Rule - forward root path to frontend service (lowest priority)
+resource "aws_lb_listener_rule" "frontend_service_https" {
+  count        = var.domain_name != "" ? 1 : 0
+  listener_arn = aws_lb_listener.https[0].arn
+  priority     = 300
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.frontend_service_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/*"]
+    }
+  }
+
+  tags = {
+    Name = "frontend-service-https-rule"
+  }
+}
