@@ -56,62 +56,79 @@ export default function Home() {
   //   ],
   // };
 
+async function fetchOccupancy() {
+  // // mock data for now
+  // setData(toiletdata);
+  // setLoading(false);
+  // console.log(data);
+  // console.log(mallId);
+  // return;
+  if (params.id === undefined) return;
+  const mallId = parseInt(params.id.toString())
+  try {
+    // 1. Fetch all toilets
+    const toiletsRes = await getToiletsMallsMallIdToiletsGet({
+      path: { mall_id: mallId },
+    });
+
+    const toilets = toiletsRes.data?.toilets ?? [];
+
+    // 2. Fetch cubicles for each toilet in parallel
+    const cubicleResponses = await Promise.all(
+      toilets.map((toilet) =>
+        getCubiclesMallsMallIdToiletsToiletIdCubiclesGet({
+          path: { mall_id: mallId, toilet_id: toilet.id },
+        })
+      )
+    );
+
+    // 3. Build nested structure
+    const nestedToilets: Toilet[] = toilets.map((toilet, index) => {
+      const cubicles: CubicleDto[] =
+        cubicleResponses[index].data?.cubicles ?? [];
+
+      const occupiedCount = cubicles.filter((c) => c.occupied).length;
+      const total = cubicles.length;
+
+      return {
+        ...toilet,
+        cubicles,
+        total_cubicles: total,
+        occupied_count: occupiedCount,
+        occupancy_percentage: total ? occupiedCount / total : 0,
+      };
+    });
+
+    // 4. Set state
+    setData(({ mall_id: mallId, toilets: nestedToilets }))
+  } catch (err) {
+    console.error("Failed to fetch mall occuancy", err);
+  } finally {
+    setLoading(false);
+  }
+  // --- end preserved block ---
+}
+
+    
+function usePolling(fetchOccupancy: () => Promise<void>) {
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    // Start polling
+    intervalId = setInterval(() => {
+      fetchOccupancy();
+    }, 1000); // 1 second
+
+    // Cleanup on unmount
+    return () => clearInterval(intervalId);
+  }, [fetchOccupancy]);
+}
+
+
+  usePolling(fetchOccupancy)
   useEffect(() => {
     if (!params.id) return;
-
-    async function fetchOccupancy(mallId: number) {
-      // // mock data for now
-      // setData(toiletdata);
-      // setLoading(false);
-      // console.log(data);
-      // console.log(mallId);
-      // return;
-
-      try {
-        // 1. Fetch all toilets
-        const toiletsRes = await getToiletsMallsMallIdToiletsGet({
-          path: { mall_id: mallId },
-        });
-
-        const toilets = toiletsRes.data?.toilets ?? [];
-
-        // 2. Fetch cubicles for each toilet in parallel
-        const cubicleResponses = await Promise.all(
-          toilets.map((toilet) =>
-            getCubiclesMallsMallIdToiletsToiletIdCubiclesGet({
-              path: { mall_id: mallId, toilet_id: toilet.id },
-            })
-          )
-        );
-
-        // 3. Build nested structure
-        const nestedToilets: Toilet[] = toilets.map((toilet, index) => {
-          const cubicles: CubicleDto[] =
-            cubicleResponses[index].data?.cubicles ?? [];
-
-          const occupiedCount = cubicles.filter((c) => c.occupied).length;
-          const total = cubicles.length;
-
-          return {
-            ...toilet,
-            cubicles,
-            total_cubicles: total,
-            occupied_count: occupiedCount,
-            occupancy_percentage: total ? occupiedCount / total : 0,
-          };
-        });
-
-        // 4. Set state
-        setData(({ mall_id: mallId, toilets: nestedToilets }))
-      } catch (err) {
-        console.error("Failed to fetch mall occuancy", err);
-      } finally {
-        setLoading(false);
-      }
-      // --- end preserved block ---
-    }
-
-    fetchOccupancy(parseInt(params.id.toString()));
+    fetchOccupancy();
   }, [params.id]);
 
   if (loading) {
@@ -121,6 +138,7 @@ export default function Home() {
   if (!data) {
     return <div>No data available.</div>;
   }
+
 
   return (
 
@@ -141,7 +159,7 @@ export default function Home() {
 
             <p>
               <strong>Occupied:</strong> {toilet.occupied_count}/{toilet.total_cubicles} (
-              {toilet.occupancy_percentage}%)
+              {toilet.occupancy_percentage*100}%)
             </p>
 
             <div className="mt-3 space-y-1">

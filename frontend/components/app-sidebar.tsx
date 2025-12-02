@@ -23,16 +23,16 @@ const items = [
     url: "/dashboard",
     icon: Home,
   },
-  {
-    title: "Edit Profile",
-    url: "/profile",
-    icon: Inbox,
-  },
-  {
-    title: "Restroom Database",
-    url: "/database",
-    icon: Calendar,
-  },
+  // {
+  //   title: "Edit Profile",
+  //   url: "/profile",
+  //   icon: Inbox,
+  // },
+  // {
+  //   title: "Restroom Database",
+  //   url: "/database",
+  //   icon: Calendar,
+  // },
 ]
 
 
@@ -41,7 +41,7 @@ export function signOut() {
 
   return () => {
     localStorage.removeItem("id");
-    location.href = "/"
+    location.href = "/admin"
   };
 }
 
