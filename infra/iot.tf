@@ -41,7 +41,7 @@ resource "aws_iot_policy" "sensor_policy" {
         Action = [
           "iot:Connect"
         ]
-        Resource = "arn:aws:iot:*:*:client/$${iot:Connection.Thing.ThingName}"
+        Resource = "arn:aws:iot:${var.region}:${data.aws_caller_identity.current.account_id}:client/$${iot:Connection.Thing.ThingName}"
       },
       {
         Effect = "Allow"
@@ -49,7 +49,7 @@ resource "aws_iot_policy" "sensor_policy" {
           "iot:Publish"
         ]
         Resource = [
-          "arn:aws:iot:*:*:topic/cubicle/*"
+          "arn:aws:iot:${var.region}:${data.aws_caller_identity.current.account_id}:topic/cubicle/*"
         ]
       },
       {
@@ -58,7 +58,7 @@ resource "aws_iot_policy" "sensor_policy" {
           "iot:Subscribe"
         ]
         Resource = [
-          "arn:aws:iot:*:*:topicfilter/cubicle/*"
+          "arn:aws:iot:${var.region}:${data.aws_caller_identity.current.account_id}:topicfilter/cubicle/*"
         ]
       },
       {
@@ -67,7 +67,7 @@ resource "aws_iot_policy" "sensor_policy" {
           "iot:Receive"
         ]
         Resource = [
-          "arn:aws:iot:*:*:topic/cubicle/*"
+          "arn:aws:iot:${var.region}:${data.aws_caller_identity.current.account_id}:topic/cubicle/*"
         ]
       }
     ]
@@ -82,11 +82,6 @@ resource "aws_iot_certificate" "sensor_cert" {
 # IoT Thing - Represents a physical device
 resource "aws_iot_thing" "sensor_device" {
   name = "sensor-device-001"
-
-  attributes = {
-    device_type = "occupancy_sensor"
-    location    = "restroom_unit_1"
-  }
 }
 
 # Attach Policy to Certificate

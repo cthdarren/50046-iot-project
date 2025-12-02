@@ -26,9 +26,9 @@ import paho.mqtt.client as mqtt
 # ============================================
 # Configuration - UPDATE THESE VALUES
 # ============================================
-IOT_ENDPOINT = "your-endpoint.iot.us-east-1.amazonaws.com"  # Get from: terraform output iot_endpoint
+IOT_ENDPOINT = "a1bbfu51vx9kob-ats.iot.ap-southeast-1.amazonaws.com"  # Get from: terraform output iot_endpoint
 THING_NAME = "sensor-device-001"  # Get from: terraform output iot_thing_name
-DEVICE_ID = "restroom_unit_1"  # Unique identifier for this sensor
+DEVICE_ID = "1"  # Unique identifier for this sensor
 
 # Certificate paths (relative to iot-certificates directory)
 CERT_DIR = "../iot-certificates"
@@ -37,7 +37,7 @@ CERT_FILE = f"{CERT_DIR}/device-certificate.pem.crt"
 KEY_FILE = f"{CERT_DIR}/private.pem.key"
 
 # MQTT Topics
-TOPIC_BASE = f"sensors/{DEVICE_ID}"
+TOPIC_BASE = f"cubicle/{DEVICE_ID}"
 TOPIC_OCCUPANCY = f"{TOPIC_BASE}/occupancy"
 TOPIC_ENVIRONMENT = f"{TOPIC_BASE}/environment"
 TOPIC_STATUS = f"{TOPIC_BASE}/status"

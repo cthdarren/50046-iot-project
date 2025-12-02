@@ -68,7 +68,12 @@ output "alb_dns" {
 
 output "alb_url" {
   description = "Public URL of the shared ALB"
-  value       = "http://${aws_lb.iot_alb.dns_name}"
+  value       = var.domain_name != "" ? "https://${var.domain_name}" : "http://${aws_lb.iot_alb.dns_name}"
+}
+
+output "alb_https_url" {
+  description = "HTTPS URL when using custom domain"
+  value       = var.domain_name != "" ? "https://${var.domain_name}" : "Not configured - set domain_name variable"
 }
 
 # =========================================================
@@ -77,7 +82,7 @@ output "alb_url" {
 
 output "availability_service_url" {
   description = "Public URL to access the availability service API"
-  value       = "http://${aws_lb.iot_alb.dns_name}"
+  value       = var.domain_name != "" ? "https://${var.domain_name}/availability" : "http://${aws_lb.iot_alb.dns_name}/availability"
 }
 
 output "availability_service_target_group_arn" {
@@ -91,7 +96,7 @@ output "availability_service_target_group_arn" {
 
 output "analytics_service_url" {
   description = "Public URL to access the analytics service API"
-  value       = "http://${aws_lb.iot_alb.dns_name}/analytics"
+  value       = var.domain_name != "" ? "https://${var.domain_name}/analytics" : "http://${aws_lb.iot_alb.dns_name}/analytics"
 }
 
 output "analytics_service_target_group_arn" {
