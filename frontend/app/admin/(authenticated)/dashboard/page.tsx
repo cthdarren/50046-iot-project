@@ -94,10 +94,6 @@ function parseMallToiletOccupancy(
 //   }
 
 export const columns: ColumnDef<ParsedToilet>[] = [
-
-  {
-    accessorKey: "id",
-  },
   {
     accessorKey: "name",
     header: "Name",
@@ -136,7 +132,7 @@ export const columns: ColumnDef<ParsedToilet>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex justify-end"> 
-            <Button variant="default" onClick={() => viewHistoricalData(row.getValue("id"))}>
+            <Button variant="default" onClick={() => {viewHistoricalData(row.original.id.toString())}}>
               <span> View Historical Data </span>
             </Button>
         </div>
