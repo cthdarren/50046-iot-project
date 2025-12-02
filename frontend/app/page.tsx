@@ -1,65 +1,153 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
+import { ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getMallsMallsGet } from "./services/availability";
+import type { GetMallsMallsGetData, MallDto } from "./services/availability";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+
+  const [malls, setMalls] = useState<MallDto[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [open, setOpen] = useState(false);
+  const [selectedMallId, setSelectedMallId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchMalls = async () => {
+      try {
+        setIsLoading(true);
+        // ASSUMPTION: getMallsMallsGet() returns Promise<MallDto[]>
+        const mallsRes = await getMallsMallsGet();
+        console.log(mallsRes)
+        const data: MallDto[] = mallsRes.data?? [];
+        // const data:MallDto[] = [
+        //   {
+        //     "id": 0,
+        //     "name": "Mall1",
+        //     "toilets": []
+        //   },
+        //   {
+        //     "id": 1,
+        //     "name": "CCP",
+        //     "toilets": []
+        //   }
+        // ]
+        setMalls(data);
+      } catch (err) {
+        console.error("Failed to load malls", err);
+      } finally {
+        console.log("fetched malls")
+        setIsLoading(false);
+      }
+    };
+
+    fetchMalls();
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (selectedMallId === null) {
+      alert("Please select a mall first");
+      return;
+    }
+
+    // TODO: navigate to your mall detail page
+    // e.g. router.push(`/mall/${selectedMallId}`);
+    router.push(`/mall/${selectedMallId}`);
+    console.log("Selected mall ID:", selectedMallId);
+  };
+
+  const selectedMall = selectedMallId !== null
+    ? malls.find((m) => m.id === selectedMallId)
+    : undefined;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+    <div className="flex w-full h-screen justify-center items-center">
+      <div className="flex flex-col">
+        <h1 className="text-xl mb-4">Select a Mall</h1>
+
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-72 justify-between"
+                disabled={isLoading}
+              >
+                {isLoading
+                  ? "Loading malls..."
+                  : (selectedMall !== null && selectedMall !== undefined)
+                  ? selectedMall.name
+                  : "Search and select a mall"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-0">
+              <Command>
+                <CommandInput placeholder="Search mall name..." />
+                <CommandList>
+                  <CommandEmpty>No mall found.</CommandEmpty>
+                  <CommandGroup>
+                    {malls.map((mall) => (
+                      <CommandItem
+                        // value is used for filtering by CommandInput
+                        key={mall.id}
+                        value={`${mall.id}-${mall.name}`}
+                        onSelect={(currentValue) => {
+                          const idPart = currentValue.split("-")[0];
+                          const parsedId = Number(idPart);
+                          if (!Number.isNaN(parsedId)) {
+                            setSelectedMallId(parsedId);
+                          }
+                          setOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            mall.id === selectedMallId
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        {mall.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          <Button type="submit" className="w-72">
+            Continue
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
+

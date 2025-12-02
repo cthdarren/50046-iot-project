@@ -94,23 +94,16 @@ services:
     volumes:
       - ./.env:/app/.env
 
-  # frontend:
+  frontend:
   #   # Placeholder frontend service. Replace with your chosen framework dev server.
-  #   build:
-  #     context: ./frontend
-  #   container_name: frontend
-  #   environment:
-  #     VITE_API_BASE_URL: http://localhost:3001
-  #   command:
-  #     [
-  #       "sh",
-  #       "-c",
-  #       "echo 'Add frontend code to start your dev server' && sleep infinity",
-  #     ]
-  #   ports:
-  #     - "5173:5173" # Common Vite port; adjust per framework
-  #   depends_on:
-  #     - backend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
   bridge-mqtt-to-lambda:
     # Simple Node subscriber that listens to MQTT and invokes local lambda HTTP endpoint.

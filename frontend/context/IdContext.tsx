@@ -1,0 +1,37 @@
+"use client";
+
+import { createContext, useContext, useEffect, useState } from "react";
+
+type IdContextType = {
+  id: number | null;
+  setId: (id: number) => void;
+};
+
+const IdContext = createContext<IdContextType | undefined>(undefined);
+
+export function IdProvider({ children }: { children: React.ReactNode }) {
+  const [id, setIdState] = useState<number | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("id");
+    if (stored) setIdState(Number(stored));
+  }, []);
+
+  const setId = (value: number) => {
+    setIdState(value);
+    localStorage.setItem("id", String(value));
+  };
+
+  return (
+    <IdContext.Provider value={{ id, setId }}>
+      {children}
+    </IdContext.Provider>
+  );
+}
+
+export function useId() {
+  const ctx = useContext(IdContext);
+  if (!ctx) throw new Error("useId must be used inside an IdProvider");
+  return ctx;
+}
+
