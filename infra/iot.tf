@@ -69,6 +69,13 @@ resource "aws_iot_policy" "sensor_policy" {
         Resource = [
           "arn:aws:iot:${var.region}:${data.aws_caller_identity.current.account_id}:topic/cubicle/*"
         ]
+      },
+      {
+        Effect = "Allow"
+        Action = "iot:RetainPublish"
+        Resource = [
+          "arn:aws:iot:${var.region}:${data.aws_caller_identity.current.account_id}:topic/cubicle/*"
+        ]
       }
     ]
   })
